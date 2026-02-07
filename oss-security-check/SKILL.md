@@ -1,7 +1,8 @@
 ---
 name: oss-security-check
 description: This skill should be used when the user asks to "check this repo", "audit this project", "is this repo safe", "review this open source tool", or when another skill (git, install-mcp, install-skill) needs a security assessment of an external/public repository or package. Provides a unified security, quality, and privacy assessment.
-version: 1.0.0
+metadata:
+  version: 1.0.0
 ---
 
 # OSS Security Check
@@ -29,7 +30,7 @@ Perform these searches:
 1. `"<owner>/<repo>" vulnerability OR security OR CVE OR exploit`
 2. `"<owner>/<repo>" malware OR malicious OR backdoor`
 3. `"<owner>" OR "<author>" security researcher OR hacker OR reputation`
-4. `site:github.com "<owner>/<repo>" security issue OR advisory`
+4. `site:<host> "<owner>/<repo>" security issue OR advisory`
 
 Also check:
 

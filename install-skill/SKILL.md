@@ -1,7 +1,8 @@
 ---
 name: install-skill
 description: This skill should be used when the user asks to "install a skill", "import a skill", "add this skill", "try this skill from GitHub", or mentions installing, importing, or adding any AI coding skill/prompt from an external source. Gates external skill installs with a security assessment.
-version: 1.0.0
+metadata:
+  version: 1.0.0
 ---
 
 # Install Skill (Secure)

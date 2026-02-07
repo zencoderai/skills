@@ -1,7 +1,8 @@
 ---
 name: install-mcp
 description: This skill should be used when the user asks to "install an MCP server", "add this MCP server", "set up MCP", "configure this MCP tool", "add this to my MCP config", or mentions installing, setting up, or configuring any MCP (Model Context Protocol) server from an external source. Gates external MCP server installs with a security assessment.
-version: 1.0.0
+metadata:
+  version: 1.0.0
 ---
 
 # Install MCP (Secure)

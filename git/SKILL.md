@@ -1,7 +1,8 @@
 ---
 name: git
 description: This skill should be used when the user asks to "clone a repo", "git clone", "check out this repo", "install this tool from GitHub", "try this open source project", or mentions cloning, checking out, or installing any Git repository. Automatically gates public repo clones with a security assessment before execution.
-version: 2.0.0
+metadata:
+  version: 2.0.0
 ---
 
 # Git (Secure Clone)
