@@ -146,4 +146,3 @@ If the recommendation was "medium" or "high" risk:
 ## Notes
 
 - Prefer source-code install at a pinned tag over `npx`/`pip install` to avoid supply chain attacks.
-- Complements the `mcp-secure-install` skill if present — use both for defense in depth.
