@@ -36,7 +36,7 @@ Pass it:
 - `<url>` — the source repository or package registry URL
 - `<owner>/<repo>` — extracted from the source
 - `<host>` — github.com, npmjs.com, pypi.org, etc.
-- Context: "This is an MCP server the user wants to install. Weight prompt injection and action surface analysis heavily — MCP servers expose tools that the AI agent will call autonomously."
+- Context: "This is an MCP server. Run a thorough security assessment across all categories."
 
 Wait for the assessment to complete.
 
@@ -72,6 +72,25 @@ Check the MCP server's configuration for:
 - If network: is TLS required? Is auth required?
 - Are there any exposed ports?
 
+#### Supply chain verification
+
+For MCP servers installed via package registries (npm, PyPI), verify the dependency chain. Small/indie packages are high-value targets — a single phished npm token can compromise every downstream user.
+
+**Lock file and pinning:**
+- Check that a lock file exists (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `poetry.lock`, `requirements.txt` with hashes)
+- Verify versions are pinned — not `*`, `latest`, `>=`, or unpinned ranges
+- Run `npm audit` / `pip audit` and flag high-severity CVEs
+
+**Package provenance (especially for small/single-maintainer projects):**
+- Verify the npm/PyPI package owner matches the GitHub repo owner — a mismatch is a red flag for package name squatting
+- Check the package publish history — a sudden publish after months of dormancy suggests account takeover, not a feature release
+- Look for version anomalies — unexpected major bumps, yanked versions, or versions published outside normal patterns
+- Check whether the package requires post-install scripts (`preinstall`, `install`, `postinstall` in `package.json`, custom build commands in `setup.py` / `pyproject.toml`) — these execute automatically during install, before any code review
+
+**If the MCP server is installed via `npx <package>`:**
+- Run `npm pack --dry-run <package>` first to inspect what will be downloaded
+- Check the package tarball contents for unexpected files
+
 ### 4. Present combined results
 
 Show the base `oss-security-check` assessment table plus the MCP-specific findings:
@@ -102,7 +121,21 @@ Ask the user:
 
 ### 6. Execute the installation
 
-If approved, install the MCP server. Add it to the appropriate config file (Claude Desktop, Claude Code, Zen CLI, etc.).
+**Prefer source code over registry packages.** Clone the repo, check out a specific tag, build and run locally. This sidesteps npm/PyPI supply chain attacks entirely:
+
+```bash
+# Good — clone, audit, pin to tag
+cd ~/mcps
+git clone https://github.com/author/mcp-server.git
+cd mcp-server
+git checkout v1.2.3
+npm install  # from audited source
+
+# Bad — blind trust in registry
+npx @author/mcp-server
+```
+
+If the user approved a registry install (npm/pip), ensure versions are pinned in a lock file.
 
 If the recommendation was "medium" or "high" risk:
 - Suggest enabling only specific tools, not the full set
@@ -111,6 +144,5 @@ If the recommendation was "medium" or "high" risk:
 
 ## Notes
 
-- MCP servers run with the same permissions as your AI agent. A malicious MCP server can read your files, access your credentials, and take actions on your behalf.
-- The tool inventory is critical — an MCP server that exposes a `run_shell_command` tool is fundamentally different from one that exposes `read_file`.
-- This skill does NOT replace the `mcp-secure-install` skill if you have it — it adds a pre-install security gate. Use both together for defense in depth.
+- Prefer source-code install at a pinned tag over `npx`/`pip install` to avoid supply chain attacks.
+- Complements the `mcp-secure-install` skill if present — use both for defense in depth.
