@@ -1,13 +1,24 @@
 ---
 name: install-skill
-description: This skill should be used when the user asks to "install a skill", "import a skill", "add this skill", "try this skill from GitHub", or mentions installing, importing, or adding any AI coding skill/prompt from an external source. Gates external skill installs with a security assessment.
+description: This skill should be used when the user asks to "install a skill", "import a skill", "add this skill", "try this skill from GitHub", or mentions installing, importing, or adding any AI coding skill/prompt from an external source. Gates external skill installs with a security assessment and installs across all supported CLIs.
 metadata:
   version: 1.0.0
 ---
 
-# Install Skill (Secure)
+# Install Skill (Secure + Multi-CLI)
 
-Gate every skill installation from an external/public source with a security assessment.
+Gate every skill installation from an external/public source with a security assessment, then install across all supported CLIs via symlinks.
+
+## CLI Skill Locations
+
+| CLI | Skill Directory |
+|-----|-----------------|
+| Claude Code | `~/.claude/skills/` |
+| Claude Desktop | `~/Library/Application Support/Claude/skills/` |
+| Zen CLI | `~/.zencoder/skills/` |
+| Codex CLI | `~/.codex/skills/` |
+| Gemini CLI | `~/.gemini/skills/` |
+| Codex App | `~/Library/Application Support/Codex/skills/` |
 
 ## Trigger
 
@@ -102,7 +113,7 @@ Ask the user:
 
 ### 6. Execute the installation
 
-**Prefer source code over registry packages.** If the skill has dependencies, clone the repo, check out a specific tag, and install from the audited source:
+**Prefer source code over registry packages.** Clone the repo, check out a specific tag, and install from the audited source:
 
 ```bash
 # Good — clone, audit, pin to tag
@@ -112,9 +123,42 @@ git checkout v1.0.0
 npm install  # or pip install -r requirements.txt — from audited source
 ```
 
-If approved, install the skill. If an install script exists (like `install-skill.sh`), use it. Otherwise, copy/symlink to the appropriate skill directories.
-
 If prompt injection was detected at any level, **always** recommend "Install and review" over direct install.
+
+### 7. Install across all CLIs
+
+Use the bundled install script to symlink the skill into every supported CLI at once:
+
+```bash
+# Install to all CLIs
+./scripts/install-skill.sh skill-name
+
+# Uninstall from all CLIs
+./scripts/install-skill.sh skill-name --uninstall
+
+# List installed skills
+./scripts/install-skill.sh --list
+```
+
+The script creates symlinks from `~/skills/[skill-name]/` to each CLI's skill directory. One source of truth, available everywhere.
+
+**Manual alternative** — if you prefer not to use the script:
+
+```bash
+SKILL="skill-name"
+ln -sf ~/skills/$SKILL ~/.claude/skills/$SKILL
+ln -sf ~/skills/$SKILL ~/.zencoder/skills/$SKILL
+ln -sf ~/skills/$SKILL ~/.codex/skills/$SKILL
+ln -sf ~/skills/$SKILL ~/.gemini/skills/$SKILL
+```
+
+### 8. Verify installation
+
+Test that the skill is recognized in each CLI:
+- Claude Code: ask the agent to use the skill
+- Zen CLI: ask the agent to use the skill
+- Codex CLI: ask the agent to use the skill
+- Gemini CLI: ask the agent to use the skill
 
 ## Notes
 

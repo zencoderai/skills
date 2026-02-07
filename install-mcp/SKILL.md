@@ -1,13 +1,22 @@
 ---
 name: install-mcp
-description: This skill should be used when the user asks to "install an MCP server", "add this MCP server", "set up MCP", "configure this MCP tool", "add this to my MCP config", or mentions installing, setting up, or configuring any MCP (Model Context Protocol) server from an external source. Gates external MCP server installs with a security assessment.
+description: This skill should be used when the user asks to "install an MCP server", "add this MCP server", "set up MCP", "configure this MCP tool", "add this to my MCP config", or mentions installing, setting up, or configuring any MCP (Model Context Protocol) server from an external source. Gates external MCP server installs with a security assessment and configures across all supported CLIs.
 metadata:
   version: 1.0.0
 ---
 
-# Install MCP (Secure)
+# Install MCP (Secure + Multi-CLI)
 
-Gate every MCP server installation from an external/public source with a security assessment. Internal or previously-vetted servers install immediately.
+Gate every MCP server installation from an external/public source with a security assessment, then configure across all supported CLIs in one step.
+
+## Supported CLIs
+
+| CLI | Config Location | Config Format |
+|-----|-----------------|---------------|
+| Claude Code | `~/.claude.json` | `claude mcp add --scope user` |
+| Codex CLI | `~/.codex/config.toml` | `[mcp_servers.name]` sections |
+| Gemini CLI | `~/.gemini/settings.json` | `mcpServers` JSON object |
+| Zencoder CLI | `~/.zencoder/mcp.local.json` | JSON object |
 
 ## Trigger
 
@@ -143,6 +152,94 @@ If the recommendation was "medium" or "high" risk:
 - Recommend using read-only credentials where possible
 - Note any tools that should be used with confirmation prompts rather than auto-approval
 
+### 7. Set up credential wrapper
+
+Never store credentials directly in CLI config files. Use a centralized wrapper:
+
+```
+~/.config/[mcp-name]/
+├── credentials.env   (chmod 600)
+└── run-mcp.sh        (chmod 700)
+```
+
+**credentials.env** — secrets only:
+```bash
+export API_KEY="xxx"
+export API_SECRET="xxx"
+```
+
+**run-mcp.sh** — sources credentials and launches the server:
+```bash
+#!/bin/bash
+set -euo pipefail
+CREDENTIALS_FILE="$HOME/.config/[mcp-name]/credentials.env"
+if [[ ! -f "$CREDENTIALS_FILE" ]]; then
+    echo "Error: Credentials file not found: $CREDENTIALS_FILE" >&2
+    exit 1
+fi
+source "$CREDENTIALS_FILE"
+exec /path/to/mcp-server "$@"
+```
+
+Use the template at `scripts/run-mcp-template.sh` as a starting point.
+
+### 8. Configure all CLIs
+
+Point every CLI at the wrapper script. All CLIs get the same MCP in one step:
+
+**Claude Code:**
+```bash
+claude mcp add --scope user [mcp-name] -- ~/.config/[mcp-name]/run-mcp.sh
+```
+
+**Codex CLI** (`~/.codex/config.toml`):
+```toml
+[mcp_servers.mcp-name]
+command = "/Users/username/.config/[mcp-name]/run-mcp.sh"
+args = []
+```
+
+**Gemini CLI** (`~/.gemini/settings.json`):
+```json
+{
+  "mcpServers": {
+    "mcp-name": {
+      "command": "/Users/username/.config/[mcp-name]/run-mcp.sh",
+      "args": []
+    }
+  }
+}
+```
+
+**Zencoder CLI** (`~/.zencoder/mcp.local.json`):
+```json
+{
+  "mcp-name": {
+    "command": "/Users/username/.config/[mcp-name]/run-mcp.sh",
+    "args": []
+  }
+}
+```
+
+Replace `/Users/username` with the actual home directory path.
+
+### 9. Test in each CLI
+
+Verify the MCP server works in every configured CLI:
+- Claude Code: `/mcp` shows the server, test a tool call
+- Codex CLI: `mcp` shows the server, test a tool call
+- Gemini CLI: `/mcp` shows the server, test a tool call
+- Zencoder CLI: test a tool call in the agent
+
+### 10. Set file permissions
+
+```bash
+chmod 600 ~/.config/[mcp-name]/credentials.env
+chmod 700 ~/.config/[mcp-name]/run-mcp.sh
+chmod 600 ~/.claude.json ~/.codex/config.toml ~/.gemini/settings.json ~/.zencoder/mcp.local.json
+```
+
 ## Notes
 
 - Prefer source-code install at a pinned tag over `npx`/`pip install` to avoid supply chain attacks.
+- The credential wrapper pattern keeps secrets out of CLI config files, which may be synced or shared.
