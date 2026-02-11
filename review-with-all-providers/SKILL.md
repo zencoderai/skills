@@ -108,8 +108,7 @@ Compile all findings from all providers into a single deduplicated list:
 3. Merge issues that describe the same problem (same file, similar line range, same category). When merging, note which providers flagged it — issues found by multiple providers are higher confidence.
 4. Keep the best description and suggested fix from among duplicates.
 5. Sort by priority (P0 first), then by file path.
-
-Present the merged list to the user in this format:
+6. Filter put any false positives (if subagent itself said that it's not a real issue or you're 100% sure it's not a real issue).
 
 ```
 ## Merged Review Findings
