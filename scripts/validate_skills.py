@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-
 try:
     import yaml  # type: ignore
 except Exception as exc:  # pragma: no cover
@@ -216,11 +215,8 @@ def find_skill_files(skills_dir: Path) -> list[Path]:
 
 def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
-    skills_dir = repo_root / "skills"
-    if not skills_dir.exists():
-        return 0
 
-    skill_files = find_skill_files(skills_dir)
+    skill_files = find_skill_files(repo_root)
     if not skill_files:
         return 0
 
