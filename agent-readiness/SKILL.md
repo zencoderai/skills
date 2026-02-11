@@ -1,7 +1,7 @@
 ---
 name: agent-readiness
 description: Audit a repository's preparedness for autonomous AI coding agents - evaluates 86 checks spanning code quality, testing, documentation, security, and observability across 5 tiers (Bronze to Diamond)
-user-invocable: true
+disable-model-invocation: true
 ---
 
 # Repository Agent-Readiness Audit
