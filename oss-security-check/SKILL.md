@@ -101,7 +101,10 @@ Search for HTTP clients, webhook URLs, analytics, telemetry, error-reporting SDK
 - Message sending: Slack, email, webhook POST, SMS
 - Database operations: connection strings, query construction
 
-**Flag:** ungated shell execution, writes to arbitrary paths, autonomous actions without confirmation.
+- macOS security bypass: `xattr -d com.apple.quarantine`, `xattr -cr`, `spctl --master-disable`
+- Binary downloads: instructions or code that download `.dmg`, `.pkg`, `.app`, `.exe` files
+
+**Flag:** ungated shell execution, writes to arbitrary paths, autonomous actions without confirmation, quarantine bypass, binary downloads.
 
 #### 3d. Dependency risk
 
@@ -111,7 +114,10 @@ Search for HTTP clients, webhook URLs, analytics, telemetry, error-reporting SDK
 - Note total dependency count — large trees increase surface area
 - Check for post-install scripts that run automatically (`postinstall` in package.json, `setup.py` with commands)
 
-**Flag:** high-severity CVEs, unpinned deps, pipe-to-shell installers, suspicious post-install scripts.
+- Check for obfuscated payloads: base64-encoded strings decoded and piped to execution, hex-encoded commands
+- Check for ClickFix-style instructions: markdown or comments containing copy-paste shell commands with external URLs (especially in README.md, SKILL.md, INSTALL.md)
+
+**Flag:** high-severity CVEs, unpinned deps, pipe-to-shell installers, suspicious post-install scripts, obfuscated payloads, ClickFix-style install instructions.
 
 #### 3e. Prompt injection (for AI tools, MCP servers, skills)
 
