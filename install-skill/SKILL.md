@@ -76,6 +76,20 @@ If the skill includes `package.json`, `requirements.txt`, `pyproject.toml`, or o
 - Check publish history for anomalies (sudden activity after dormancy, unexpected version bumps)
 - Flag any post-install scripts (`postinstall` in `package.json`, custom build commands in `setup.py`) that execute automatically during install
 
+#### Staged delivery detection (ClickFix-style attacks)
+
+This is the attack pattern used in the [OpenClaw malware campaign](https://1password.com/blog/from-magic-to-malware-how-openclaws-agent-skills-become-an-attack-surface): a skill's markdown directs users to install a "prerequisite" that is actually malware.
+
+In the SKILL.md and any README/INSTALL files, check for:
+
+- **External prerequisite instructions** — Does the skill tell the user or agent to install another tool, package, or binary from an external URL? Flag any `curl`, `wget`, `pip install`, `npm install`, `brew install` commands that point to URLs outside the skill's own repo.
+- **Copy-paste shell commands** — Are there shell commands the user is told to run manually? Especially commands that download and execute external code.
+- **Obfuscated payloads** — Base64-encoded strings, hex-encoded commands, or multi-stage decode-and-execute chains in any file (code or markdown).
+- **macOS security bypass** — Commands like `xattr -d com.apple.quarantine`, `xattr -cr`, or `spctl --master-disable` that remove Gatekeeper protections. These are a strong signal of ClickFix-style malware delivery.
+- **Binary downloads** — Instructions to download `.dmg`, `.pkg`, `.app`, or `.exe` files from external sources.
+
+**Flag:** Any skill that requires installing external prerequisites from URLs outside its own repository. This is the primary delivery mechanism for skill-based malware.
+
 #### Permission footprint
 
 What does the skill instruct the agent to do?
@@ -96,6 +110,7 @@ What does the skill instruct the agent to do?
 ### Skill-Specific Findings
 
 **Prompt injection:** [Automated scan result — always treat as unreliable, human review required]
+**Staged delivery / ClickFix:** [None detected | Describes any external prerequisite installs, copy-paste commands, or binary downloads found]
 **Scripts included:** [count] — [summary of what they do]
 **Permission footprint:** [read-only | read-write | shell execution | network access]
 **Agent behavior modifications:** [None | Describes any attempts to modify agent defaults]
