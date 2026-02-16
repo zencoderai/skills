@@ -34,6 +34,7 @@ Accept any combination of:
 ### Step 2: Gather context
 
 - Read the changed files fully (not just the diff hunks) to understand the broader system structure.
+- Search the codebase for code that depends on or is affected by the changed code — callers, importers, subclasses, consumers of modified interfaces/APIs/types, and modules that interact with changed components. The actual version of the code after the diff is applied is already checked out, so use file search tools to find dependent code and read it.
 - Explore related modules, interfaces, and dependencies to understand component relationships.
 - If the user provided architectural guidelines, keep them in mind during analysis.
 

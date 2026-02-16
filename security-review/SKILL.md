@@ -34,6 +34,7 @@ Accept any combination of:
 ### Step 2: Gather context
 
 - Read the changed files fully to understand the security context.
+- Search the codebase for code that depends on or is affected by the changed code — callers, importers, consumers of modified interfaces/APIs/types, and code that handles the same data flows. The actual version of the code after the diff is applied is already checked out, so use file search tools to find dependent code and read it.
 - Identify trust boundaries, data flows, and authentication/authorization points.
 - Understand what sensitive data is handled and how it flows through the system.
 - If the user provided threat model or security requirements, apply them during analysis.

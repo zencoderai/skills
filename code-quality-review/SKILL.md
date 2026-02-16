@@ -34,6 +34,7 @@ Accept any combination of:
 ### Step 2: Gather context
 
 - Read the changed files fully to understand the surrounding code style.
+- Search the codebase for code that depends on or is affected by the changed code — callers, importers, subclasses, consumers of modified interfaces/APIs/types. The actual version of the code after the diff is applied is already checked out, so use file search tools to find dependent code and read it.
 - Examine related files to understand project conventions.
 - Look for existing patterns, naming conventions, and organizational structures.
 - If the user provided coding standards or style guides, apply them during analysis.

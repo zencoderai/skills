@@ -34,6 +34,7 @@ Accept any combination of:
 ### Step 2: Gather context
 
 - Read the changed files fully to understand the execution context.
+- Search the codebase for code that depends on or is affected by the changed code — callers, importers, consumers of modified interfaces/APIs/types, and code on the same hot paths. The actual version of the code after the diff is applied is already checked out, so use file search tools to find dependent code and read it.
 - Identify hot paths, loop structures, and data access patterns.
 - Understand the expected data sizes and load characteristics.
 - If the user provided performance requirements (latency SLAs, throughput targets), apply them during analysis.

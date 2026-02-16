@@ -1,6 +1,7 @@
 ---
 name: review-with-all-providers
 description: "Multi-provider code review using parallel AI subagents. Use when the user wants a comprehensive code review from multiple AI providers (Anthropic, OpenAI, Google). Works with GitHub PR links OR local branch changes. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes. Triggers: 'review this PR with all providers', 'multi-provider review', 'review with all agents', 'review my changes with all providers', or when user shares a PR URL and asks for a thorough review."
+disable-model-invocation: true
 ---
 
 # Multi-Provider Code Review

@@ -34,6 +34,7 @@ Accept any combination of:
 ### Step 2: Gather context
 
 - Read the changed files fully to understand the complete implementation.
+- Search the codebase for code that depends on or is affected by the changed code — callers, importers, subclasses, consumers of modified interfaces/APIs/types, and related tests. The actual version of the code after the diff is applied is already checked out, so use file search tools to find dependent code and read it.
 - Understand the requirements or task description provided by the user.
 - Examine related code (callers, callees, tests) to understand expected behavior.
 - Identify the contract/interface the code must fulfill.
