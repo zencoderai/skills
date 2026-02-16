@@ -69,11 +69,24 @@ If the purpose of the change is unclear, use `ask_questions` to ask any clarifyi
 
 #### PR mode
 
-```bash
-git fetch origin <headRefName>
-git checkout <headRefName>
-git pull origin <headRefName>
-```
+Try the following strategies in order until one succeeds:
+
+1. **`gh pr checkout`** (preferred — handles forks, detached heads, and deleted branches):
+   ```bash
+   gh pr checkout <PR_NUMBER> --repo <OWNER>/<REPO>
+   ```
+
+2. **Fetch by branch name** (if `gh pr checkout` fails):
+   ```bash
+   git fetch origin <headRefName> && git checkout <headRefName> && git pull origin <headRefName>
+   ```
+
+3. **Fetch by commit SHA** (if the branch was deleted or renamed):
+   ```bash
+   git fetch origin <headRefOid> && git checkout <headRefOid>
+   ```
+
+If all strategies fail, stop and ask user to fix the checkout issue.
 
 #### Local mode
 
