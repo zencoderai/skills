@@ -98,13 +98,19 @@ No checkout needed — already on the working branch.
 
 Launch **5 parallel ZencoderSubagent calls**, one for each review type. Each subagent focuses on a specific aspect of code quality.
 
-#### Review Types
+#### Review Types and Instruction Files
 
-- architecture-review
-- security-review
-- performance-review
-- code-quality-review
-- correctness-review 
+Each review type has a corresponding instruction file inside this skill's directory:
+
+| Review Type | Instruction File |
+|-------------|-----------------|
+| architecture | `architecture.md` |
+| security | `security.md` |
+| performance | `performance.md` |
+| code-quality | `code-quality.md` |
+| correctness | `correctness.md` |
+
+**IMPORTANT**: Do NOT read these instruction files yourself. Each subagent must read its own instruction file.
 
 #### Subagent Calls
 
@@ -114,7 +120,7 @@ For each review type, call `ZencoderSubagent` with:
 - **prompt**: Construct as follows:
 
 ```
-Use the <REVIEW_TYPE> skill to review the following change.
+Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow them to review the following change.
 
 ## <title>
 
@@ -124,6 +130,8 @@ Use the <REVIEW_TYPE> skill to review the following change.
 ### Diff
 <link to file containing the diff>
 ```
+
+Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `/path/to/skill/directory/architecture.md`).
 
 ### Step 7: Merge results
 

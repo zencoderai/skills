@@ -1,8 +1,3 @@
----
-name: code-quality-review
-description: "Review code changes for code quality including readability, maintainability, naming conventions, code organization, and adherence to best practices. Use when the user asks to review code quality, check code style, assess maintainability, or review coding standards. Input can be: (1) a text diff pasted directly, (2) one or more git commit hashes to extract the diff from, or (3) a git range like abc123..def456. The user may also provide coding standards or style guides."
----
-
 # Code Quality Review
 
 Expert code quality reviewer analyzing changes for readability, maintainability, and adherence to best practices. Focus on making code easy to understand, modify, and extend while following established conventions.

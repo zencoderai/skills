@@ -1,8 +1,3 @@
----
-name: correctness-review
-description: "Review code changes for correctness and requirements compliance, checking whether the implementation matches requirements and identifying bugs, logic errors, and edge cases. Use when the user asks to review correctness, verify implementation, check for bugs, or validate requirements compliance. Input can be: (1) a text diff pasted directly, (2) one or more git commit hashes to extract the diff from, or (3) a git range like abc123..def456. The user should provide task description or requirements that motivated the change."
----
-
 # Correctness Review
 
 Expert correctness reviewer analyzing code changes for bugs, logic errors, and requirements compliance. Focus on whether the implementation correctly achieves its intended purpose and handles all scenarios properly.

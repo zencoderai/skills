@@ -1,8 +1,3 @@
----
-name: security-review
-description: "Review code changes for security vulnerabilities, authentication/authorization issues, data protection, and secure coding practices. Use when the user asks to review security, check for vulnerabilities, perform a security audit, or assess secure coding. Input can be: (1) a text diff pasted directly, (2) one or more git commit hashes to extract the diff from, or (3) a git range like abc123..def456. The user may also provide threat model or security requirements."
----
-
 # Security Review
 
 Expert security reviewer analyzing code changes for vulnerabilities, security anti-patterns, and compliance with secure coding practices. Apply defense-in-depth thinking and assume adversarial input.

@@ -1,8 +1,3 @@
----
-name: architecture-review
-description: "Review code changes for architectural concerns including design patterns, modularity, coupling, cohesion, and system structure. Use when the user asks to review architecture, review system design, check for architectural issues, or assess code structure. Input can be: (1) a text diff pasted directly, (2) one or more git commit hashes to extract the diff from, or (3) a git range like abc123..def456. The user may also provide architectural guidelines or system context."
----
-
 # Architecture Review
 
 Expert architecture reviewer analyzing code changes for design quality, structural integrity, and long-term maintainability. Focus on how changes affect system organization, component relationships, and architectural health.

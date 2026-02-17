@@ -1,8 +1,3 @@
----
-name: performance-review
-description: "Review code changes for performance issues including algorithmic efficiency, resource usage, database queries, memory management, and scalability. Use when the user asks to review performance, check for bottlenecks, assess efficiency, or optimize code. Input can be: (1) a text diff pasted directly, (2) one or more git commit hashes to extract the diff from, or (3) a git range like abc123..def456. The user may also provide performance requirements or benchmarks."
----
-
 # Performance Review
 
 Expert performance reviewer analyzing code changes for efficiency, resource optimization, and scalability. Focus on algorithmic complexity, I/O patterns, memory usage, and runtime characteristics.
