@@ -19,96 +19,50 @@ Check if the user provided a GitHub PR link.
 - **PR mode**: A PR URL is provided matching `https://github.com/<OWNER>/<REPO>/pull/<PR_NUMBER>`. Extract owner, repo, and PR number.
 - **Local mode**: No PR URL provided. The review will be based on the diff between the current branch and its base branch, plus any uncommitted changes.
 
-### Step 2: Gather change details
+### Step 2: Fetch diff and task description via subagent
 
-#### PR mode
+Call a subagent to gather all change details, save the diff, and checkout the correct branch.
 
-```bash
-gh pr view <PR_NUMBER> --repo <OWNER>/<REPO> --json title,body,commits,headRefName,headRefOid,baseRefName,additions,deletions,changedFiles,files
+**IMPORTANT**: Do NOT read the file `<SKILL_DIRECTORY>/fetch-diff.md` yourself. The subagent must read it.
+
+Construct the subagent prompt as follows:
+
+```
+Read the file `<SKILL_DIRECTORY>/fetch-diff.md` for detailed instructions, then follow them.
+
+Review mode: <PR mode or Local mode>
+<If PR mode: Owner: <OWNER>, Repo: <REPO>, PR Number: <PR_NUMBER>>
 ```
 
-Save the PR title, body (task description), and head SHA for later use.
+If available use `ZencoderSubagent` tool. Use provider=anthropic and highest complexity if complexity and provider options are available.
+If `ZencoderSubagent` is not available, use any other tool to run subagent or task. Use most capable model available.
 
-#### Local mode
+The subagent will return:
+- **Diff file path**: path to the saved diff file
+- **Title**: the PR title or summary from commits
+- **Description**: comprehensive task description with all requirements
 
-Detect the current branch and its merge base:
+Save these values for use in subsequent steps.
 
-```bash
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-BASE_BRANCH=$(git log --oneline --merges --ancestry-path HEAD..$(git remote show origin | grep 'HEAD branch' | awk '{print $NF}') 2>/dev/null | tail -1 | cut -d' ' -f1 || echo "main")
-```
+### Step 3: Clarify requirements (if needed)
 
-If detecting the base branch fails, try common defaults (`main`, `master`, `develop`). Use `ask_questions` to confirm the base branch if unsure.
+If the purpose of the change is unclear from the title and description returned by the subagent, ask any clarifying questions to understand the intent. This will help guide the review and flag deviations from intended behavior. Use tool to ask questions if available. Skip this step if the context clearly describes the intent.
 
-### Step 3: Save the diff to a tmp file
-
-Call the following command piping output to a file in temp directory (do not call it without piping to avoid overloading context):
-
-#### PR mode
-
-```bash
-gh pr diff <PR_NUMBER> --repo <OWNER>/<REPO> > /tmp/review-diff-{branch-name}.patch
-```
-
-#### Local mode
-
-Generate a combined diff of committed branch changes plus uncommitted changes:
-
-```bash
-MERGE_BASE=$(git merge-base HEAD origin/<BASE_BRANCH>)
-git diff $MERGE_BASE HEAD > /tmp/review-diff-committed-{branch-name}.patch
-git diff > /tmp/review-diff-uncommitted-{branch-name}.patch
-cat /tmp/review-diff-committed-{branch-name}.patch /tmp/review-diff-uncommitted-{branch-name}.patch > /tmp/review-diff-{branch-name}.patch
-```
-
-### Step 4: Clarify requirements (if needed)
-
-Check for any .md files in the diff that may contain requirements or design docs. If found, read their contents for context.
-
-If the purpose of the change is unclear, ask any clarifying questions to understand the intent. This will help guide the review and flag deviations from intended behavior. Use tool to ask questions if available. Skip this step if the context (PR title + body or diffs) clearly describes the intent.
-
-### Step 5: Checkout the correct branch
-
-#### PR mode
-
-Try the following strategies in order until one succeeds:
-
-1. **`gh pr checkout`** (preferred — handles forks, detached heads, and deleted branches):
-   ```bash
-   gh pr checkout <PR_NUMBER> --repo <OWNER>/<REPO>
-   ```
-
-2. **Fetch by branch name** (if `gh pr checkout` fails):
-   ```bash
-   git fetch origin <headRefName> && git checkout <headRefName> && git pull origin <headRefName>
-   ```
-
-3. **Fetch by commit SHA** (if the branch was deleted or renamed):
-   ```bash
-   git fetch origin <headRefOid> && git checkout <headRefOid>
-   ```
-
-If all strategies fail, stop and ask user to fix the checkout issue.
-
-#### Local mode
-
-No checkout needed — already on the working branch.
-
-### Step 6: Run parallel specialized reviews
+### Step 4: Run parallel specialized reviews
 
 Launch **5 parallel subagent calls**, one for each review type. Each subagent focuses on a specific aspect of code quality.
 
-#### Review Types and Instruction Files
+#### Review Criteria and Instruction Files
 
-Each review type has a corresponding instruction file inside this skill's directory:
+Each review criterion has a corresponding instruction file inside this skill's directory:
 
-| Review Type | Instruction File |
+| Review criterion | Instruction File |
 |-------------|-----------------|
-| architecture | `architecture.md` |
-| security | `security.md` |
-| performance | `performance.md` |
-| code-quality | `code-quality.md` |
-| correctness | `correctness.md` |
+| architecture | `criteria/architecture.md` |
+| security | `criteria/security.md` |
+| performance | `criteria/performance.md` |
+| code-quality | `criteria/code-quality.md` |
+| correctness | `criteria/correctness.md` |
 
 **IMPORTANT**: Do NOT read these instruction files yourself. Each subagent must read its own instruction file.
 
@@ -125,15 +79,15 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 ## <title>
 
 ### Description
-<PR body / task description>
+<task description>
 
 ### Diff
 <link to file containing the diff>
 ```
 
-Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `/path/to/skill/directory/architecture.md`).
+Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
 
-### Step 7: Merge results
+### Step 5: Merge results
 
 Compile all findings from all subagents into a single deduplicated list:
 
@@ -167,7 +121,7 @@ code
 \`\`\`
 ```
 
-### Step 8: Ask user how to handle each finding
+### Step 6: Ask user how to handle each finding
 
 Ask questions to let the user decide what to do with each finding:
 
@@ -177,7 +131,7 @@ Ask questions to let the user decide what to do with each finding:
 - Use tool to ask questions if available. Ask all questions with on tool call if tool allows asking multiple questions at once. Otherwise, ask sequentially.
 - If no tool available, ask all questions at once with regular message to user.
 
-### Step 9: Apply fixes for issues marked "Fix"
+### Step 7: Apply fixes for issues marked "Fix"
 
 For each finding the user chose "Fix":
 
@@ -185,7 +139,7 @@ For each finding the user chose "Fix":
 2. Apply the suggested fix (or an appropriate fix if the suggestion is incomplete).
 3. After all fixes are applied, present a summary of changes made.
 
-### Step 10: Post selected issues as PR comments (PR mode only)
+### Step 8: Post selected issues as PR comments (PR mode only)
 
 **Skip this step entirely if no findings were marked "Post comment".**
 
