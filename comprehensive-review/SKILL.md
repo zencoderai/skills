@@ -8,7 +8,7 @@ metadata:
 
 # Comprehensive Code Review
 
-Run parallel specialized code reviews via ZencoderSubagent, covering architecture, security, performance, code quality, and correctness. Merge findings and let the user act on them. Works with both GitHub PRs and local branch diffs.
+Run parallel specialized code reviews via subagents, covering architecture, security, performance, code quality, and correctness. Merge findings and let the user act on them. Works with both GitHub PRs and local branch diffs.
 
 ## Workflow
 
@@ -65,7 +65,7 @@ cat /tmp/review-diff-committed-{branch-name}.patch /tmp/review-diff-uncommitted-
 
 Check for any .md files in the diff that may contain requirements or design docs. If found, read their contents for context.
 
-If the purpose of the change is unclear, use `ask_questions` to ask any clarifying questions to understand the intent. This will help guide the review and flag deviations from intended behavior. Skip this step if the context (PR title + body or diffs) clearly describes the intent.
+If the purpose of the change is unclear, ask any clarifying questions to understand the intent. This will help guide the review and flag deviations from intended behavior. Use tool to ask questions if available. Skip this step if the context (PR title + body or diffs) clearly describes the intent.
 
 ### Step 5: Checkout the correct branch
 
@@ -96,7 +96,7 @@ No checkout needed — already on the working branch.
 
 ### Step 6: Run parallel specialized reviews
 
-Launch **5 parallel ZencoderSubagent calls**, one for each review type. Each subagent focuses on a specific aspect of code quality.
+Launch **5 parallel subagent calls**, one for each review type. Each subagent focuses on a specific aspect of code quality.
 
 #### Review Types and Instruction Files
 
@@ -114,10 +114,10 @@ Each review type has a corresponding instruction file inside this skill's direct
 
 #### Subagent Calls
 
-For each review type, call `ZencoderSubagent` with:
-- **provider**: `"anthropic"`
-- **complexity**: `"hard"`
-- **prompt**: Construct as follows:
+If available use `ZencoderSubagent` tool. Use provider=anthropic and highest complexity if complexity and provider options are available.
+If `ZencoderSubagent` is not available, use any other tool to run subagent or task. Use most capable model available.
+
+Construct prompts for subagents as follows:
 
 ```
 Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow them to review the following change.
@@ -169,12 +169,13 @@ code
 
 ### Step 8: Ask user how to handle each finding
 
-Use `ask_questions` to let the user decide what to do with each finding:
+Ask questions to let the user decide what to do with each finding:
 
 - Use one question per finding, presenting each with its number, priority, and short description.
 - **PR mode options**: "Fix", "Post comment", "Ignore"
 - **Local mode options**: "Fix", "Ignore"
-- Call `ask_questions` tool once with all findings, not one per question.
+- Use tool to ask questions if available. Ask all questions with on tool call if tool allows asking multiple questions at once. Otherwise, ask sequentially.
+- If no tool available, ask all questions at once with regular message to user.
 
 ### Step 9: Apply fixes for issues marked "Fix"
 
