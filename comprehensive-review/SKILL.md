@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: "Comprehensive code review using parallel specialized subagents. Use when the user wants a thorough code review covering architecture, security, performance, code quality, and correctness. Works with GitHub PR links OR local branch changes. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes. Triggers: 'comprehensive review', 'full code review', 'review this PR thoroughly', 'review my changes', or when user shares a PR URL and asks for a thorough review."
+description: "Comprehensive code review using parallel specialized subagents. Use when the user wants a thorough code review covering architecture, security, performance, code quality, requirements compliance, and bugs. Works with GitHub PR links OR local branch changes. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes. Triggers: 'comprehensive review', 'full code review', 'review this PR thoroughly', 'review my changes', or when user shares a PR URL and asks for a thorough review."
 disable-model-invocation: true
 metadata:
   version: 1.0.0
@@ -8,7 +8,7 @@ metadata:
 
 # Comprehensive Code Review
 
-Run parallel specialized code reviews via subagents, covering architecture, security, performance, code quality, and correctness. Merge findings and let the user act on them. Works with both GitHub PRs and local branch diffs.
+Run parallel specialized code reviews via subagents, covering architecture, security, performance, code quality, requirements compliance, and bugs. Merge findings and let the user act on them. Works with both GitHub PRs and local branch diffs.
 
 ## Workflow
 
@@ -63,19 +63,20 @@ Each review criterion has a corresponding instruction file inside this skill's d
 | security | `criteria/security.md` |
 | performance | `criteria/performance.md` |
 | code-quality | `criteria/code-quality.md` |
-| correctness | `criteria/correctness.md` |
+| requirements-compliance | `criteria/requirements-compliance.md` |
+| bugs | `criteria/bugs.md` |
 
 #### Strategy A: Simple complexity
 
 For **simple** PRs, perform the review yourself (the root agent) without calling subagents.
 
-1. Read **all 5** criteria instruction files from `<SKILL_DIRECTORY>/criteria/`.
+1. Read **all 6** criteria instruction files from `<SKILL_DIRECTORY>/criteria/`.
 2. Read the diff file.
 3. Apply all criteria to review the change yourself, producing findings in the same format as subagents would.
 
 #### Strategy B: Medium complexity
 
-For **medium** PRs, launch **5 parallel subagent calls** — one per review criterion.
+For **medium** PRs, launch **6 parallel subagent calls** — one per review criterion.
 
 **IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
 
@@ -100,16 +101,16 @@ Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `<SKIL
 
 #### Strategy C: Hard complexity
 
-For **hard** PRs, launch **2 parallel subagent calls per criterion** (10 total) — one per criterion per provider, using 2 different providers for diverse perspectives.
+For **hard** PRs, launch **2 parallel subagent calls per criterion** (12 total) — one per criterion per provider, using 2 different providers for diverse perspectives.
 
 **IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
 
-**Provider selection**: Choose exactly 2 providers from those available. Prefer `anthropic` and `openai`. If only one of them is available, pair it with whatever other provider is available. If neither is available, pick any 2 available providers. If only 1 provider is available, use it for all 5 calls (fall back to Strategy B behavior).
+**Provider selection**: Choose exactly 2 providers from those available. Prefer `anthropic` and `openai`. If only one of them is available, pair it with whatever other provider is available. If neither is available, pick any 2 available providers. If only 1 provider is available, use it for all 6 calls (fall back to Strategy B behavior).
 
 If available use `ZencoderSubagent` tool. Use complexity=hard.
 If `ZencoderSubagent` is not available, use any other tool to run subagent or task. Use most capable model available.
 
-For each of the 5 criteria, launch 2 subagent calls (one per selected provider) with the same prompt:
+For each of the 6 criteria, launch 2 subagent calls (one per selected provider) with the same prompt:
 
 ```
 Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow them to review the following change.
@@ -125,7 +126,7 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 
 Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
 
-All 10 calls should be launched in parallel.
+All 12 calls should be launched in parallel.
 
 ### Step 5: Merge results
 
@@ -144,7 +145,7 @@ Compile all findings into a single deduplicated list. For **simple** PRs, you al
 | # | Priority | Issue | File:Line | Review type |
 |---|----------|-------|-----------|------------|
 | 1 | P0 | Description | path:line | architecture(anthropic), security(openai) |
-| 2 | P1 | Description | path:line | correctness(anthropic) |
+| 2 | P1 | Description | path:line | bugs(anthropic) |
 | ... | | | | |
 
 ### Details

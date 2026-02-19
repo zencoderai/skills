@@ -1,6 +1,6 @@
-# Correctness Review
+# Bug Review
 
-Expert correctness reviewer analyzing code changes for bugs, logic errors, and requirements compliance. Focus on whether the implementation correctly achieves its intended purpose and handles all scenarios properly.
+Expert bug reviewer analyzing code changes for logic errors, edge case failures, state management issues, and data handling problems. Focus on whether the implementation is free of bugs and handles all scenarios correctly.
 
 ## Inputs
 
@@ -33,7 +33,6 @@ Accept any combination of:
 - Understand the requirements or task description provided by the user.
 - Examine related code (callers, callees, tests) to understand expected behavior.
 - Identify the contract/interface the code must fulfill.
-- If no requirements are provided, ask the user what the change is supposed to accomplish.
 
 ### Step 3: Analyze changes
 
@@ -43,20 +42,12 @@ Review against two tiers using the checklist below.
 
 | Level | Meaning | Action |
 |-------|---------|--------|
-| P0 | Critical — incorrect behavior, data corruption, crashes | Must fix |
-| P1 | Major — significant bug, requirement not met, broken feature | Must fix |
+| P0 | Critical — crashes, data corruption, incorrect behavior in common paths | Must fix |
+| P1 | Major — significant bug, broken feature, incorrect output | Must fix |
 | P2 | Minor — edge case handling, defensive improvements | Nice to fix |
 | P3 | Suggestion — robustness enhancement | Optional |
 
 #### Critical Issues (P0–P1)
-
-**Requirements Compliance:**
-- Feature not implemented as specified
-- Missing required functionality
-- Behavior contradicts requirements
-- Acceptance criteria not satisfied
-- Business rules implemented incorrectly
-- Output format/structure doesn't match specification
 
 **Logic Errors:**
 - Incorrect conditional logic (wrong operators, inverted conditions)
@@ -97,6 +88,13 @@ Review against two tiers using the checklist below.
 - Exceptions thrown where not declared
 - Side effects not matching documentation
 
+**Concurrency:**
+- Race conditions between threads/processes
+- Deadlock possibilities
+- Missing synchronization on shared state
+- Atomicity violations
+- Order-of-operations bugs in async code
+
 #### Robustness (P2–P3)
 
 **Defensive Coding:**
@@ -119,60 +117,46 @@ Review against two tiers using the checklist below.
 - Behavior changes that need test updates
 - Edge cases without test coverage
 
-**Documentation:**
-- Behavior not documented
-- Doc comments don't match implementation
-- Missing preconditions/postconditions
-- Examples that don't work
-
 **Principles:**
 - Only flag issues **introduced by the change**, not pre-existing problems.
-- Verify against stated requirements — flag deviations explicitly.
 - Consider the full execution context, including concurrent scenarios.
 - Trace data flow to identify transformation errors.
 - Think about what happens when things go wrong, not just the happy path.
+- Verify error handling paths are correct, not just present.
 
 ### Step 4: Produce the review
 
 Output this format:
 
 ```
-## Correctness Review
+## Bug Review
 
 **Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Correctness Level**: [CORRECT | MOSTLY CORRECT | PARTIALLY CORRECT | INCORRECT]
+**Bug Risk**: [NONE | LOW | MEDIUM | HIGH | CRITICAL]
 **Confidence**: [HIGH | MEDIUM | LOW]
 
 ### Summary
-[1-2 sentences: does this implementation meet the requirements and assessment of bug risk]
-
-### Requirements Compliance
-
-| Requirement | Status | Notes |
-|-------------|--------|-------|
-| [Requirement 1] | ✅ Met | — |
-| [Requirement 2] | ⚠️ Partial | Missing X |
-| [Requirement 3] | ❌ Not Met | See P1-002 |
+[1-2 sentences: assessment of bug risk in this change]
 
 ### Findings
 
-| Priority | Bug/Issue | Type | Location |
-|----------|-----------|------|----------|
+| Priority | Bug | Type | Location |
+|----------|-----|------|----------|
 | P0 | Description | Logic Error | file:line |
-| P1 | Description | Requirements | file:line |
-| P2 | Description | Edge Case | file:line |
+| P1 | Description | Edge Case | file:line |
+| P2 | Description | State Issue | file:line |
 
 ### Details
 
 #### [P0/P1] Issue title
 **File:** `path/to/file.ext:line`
-**Type:** [Logic Error | Requirements Gap | Edge Case | State | Data Handling]
+**Type:** [Logic Error | Edge Case | State Management | Data Handling | API Contract | Concurrency]
 
 **Description:**
 What the bug is and what incorrect behavior it causes.
 
 **Expected behavior:**
-What should happen according to requirements.
+What should happen.
 
 **Actual behavior:**
 What the current code does instead.
@@ -209,9 +193,8 @@ test that would catch this bug
 **Rules:**
 - Use `APPROVE` only when there are no P0 or P1 findings.
 - Use `REQUEST CHANGES` when P0 or P1 findings exist.
-- Use `NEEDS DISCUSSION` when requirements are ambiguous and need clarification.
-- Always include requirements compliance matrix if requirements were provided.
+- Use `NEEDS DISCUSSION` when behavior is ambiguous and could be intentional.
 - Include reproduction scenarios for bugs to help verify fixes.
 - Suggest test cases that would prevent regressions.
 - Include corrected code for every P0 and P1 finding.
-- Focus on correctness of behavior, not code style or performance (unless affecting correctness).
+- Focus on bugs and logic errors, not code style, performance, or requirements compliance (unless they directly cause bugs).
