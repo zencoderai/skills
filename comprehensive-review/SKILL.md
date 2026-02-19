@@ -41,6 +41,7 @@ The subagent will return:
 - **Diff file path**: path to the saved diff file
 - **Title**: the PR title or summary from commits
 - **Description**: comprehensive task description with all requirements
+- **Complexity**: one of `simple`, `medium`, or `hard`
 
 Save these values for use in subsequent steps.
 
@@ -48,9 +49,9 @@ Save these values for use in subsequent steps.
 
 If the purpose of the change is unclear from the title and description returned by the subagent, ask any clarifying questions to understand the intent. This will help guide the review and flag deviations from intended behavior. Use tool to ask questions if available. Skip this step if the context clearly describes the intent.
 
-### Step 4: Run parallel specialized reviews
+### Step 4: Run specialized reviews
 
-Launch **5 parallel subagent calls**, one for each review type. Each subagent focuses on a specific aspect of code quality.
+The review strategy depends on the **complexity** returned by the fetch-diff subagent.
 
 #### Review Criteria and Instruction Files
 
@@ -64,11 +65,21 @@ Each review criterion has a corresponding instruction file inside this skill's d
 | code-quality | `criteria/code-quality.md` |
 | correctness | `criteria/correctness.md` |
 
-**IMPORTANT**: Do NOT read these instruction files yourself. Each subagent must read its own instruction file.
+#### Strategy A: Simple complexity
 
-#### Subagent Calls
+For **simple** PRs, perform the review yourself (the root agent) without calling subagents.
 
-If available use `ZencoderSubagent` tool. Use provider=anthropic and highest complexity if complexity and provider options are available.
+1. Read **all 5** criteria instruction files from `<SKILL_DIRECTORY>/criteria/`.
+2. Read the diff file.
+3. Apply all criteria to review the change yourself, producing findings in the same format as subagents would.
+
+#### Strategy B: Medium complexity
+
+For **medium** PRs, launch **5 parallel subagent calls** — one per review criterion.
+
+**IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
+
+If available use `ZencoderSubagent` tool. Use complexity=hard. Prefer `anthropic` and `openai` providers if they are available.
 If `ZencoderSubagent` is not available, use any other tool to run subagent or task. Use most capable model available.
 
 Construct prompts for subagents as follows:
@@ -87,31 +98,60 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 
 Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
 
+#### Strategy C: Hard complexity
+
+For **hard** PRs, launch **2 parallel subagent calls per criterion** (10 total) — one per criterion per provider, using 2 different providers for diverse perspectives.
+
+**IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
+
+**Provider selection**: Choose exactly 2 providers from those available. Prefer `anthropic` and `openai`. If only one of them is available, pair it with whatever other provider is available. If neither is available, pick any 2 available providers. If only 1 provider is available, use it for all 5 calls (fall back to Strategy B behavior).
+
+If available use `ZencoderSubagent` tool. Use complexity=hard.
+If `ZencoderSubagent` is not available, use any other tool to run subagent or task. Use most capable model available.
+
+For each of the 5 criteria, launch 2 subagent calls (one per selected provider) with the same prompt:
+
+```
+Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow them to review the following change.
+
+## <title>
+
+### Description
+<task description>
+
+### Diff
+<link to file containing the diff>
+```
+
+Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
+
+All 10 calls should be launched in parallel.
+
 ### Step 5: Merge results
 
-Compile all findings from all subagents into a single deduplicated list:
+Compile all findings into a single deduplicated list. For **simple** PRs, you already have all findings from your self-review. For **medium** and **hard** PRs, collect findings from all subagent responses.
 
-1. Collect all findings from each subagent response.
+1. Collect all findings from each review (self-review or subagent responses).
 2. Group findings by file and line number.
-3. Merge issues that describe the same problem (same file, similar line range, same category). When merging, note which type of review flagged it.
+3. Merge issues that describe the same problem (same file, similar line range, same category). When merging, combine their review types. For **hard** PRs, findings from different providers on the same criterion that agree strengthen confidence; findings from only one provider should be noted as lower confidence.
 4. Keep the best description and suggested fix from among duplicates.
 5. Sort by priority (P0 first), then by file path.
-6. Filter put any false positives (if subagent itself said that it's not a real issue or you're 100% sure it's not a real issue).
+6. Filter out any false positives (if a subagent itself said that it's not a real issue or you're 100% sure it's not a real issue).
 
 ```
 ## Comprehensive Review Findings
 
 | # | Priority | Issue | File:Line | Review type |
 |---|----------|-------|-----------|------------|
-| 1 | P0 | Description | path:line | architecture, security |
-| 2 | P1 | Description | path:line | correctness |
+| 1 | P0 | Description | path:line | architecture(anthropic), security(openai) |
+| 2 | P1 | Description | path:line | correctness(anthropic) |
 | ... | | | | |
 
 ### Details
 
 #### 1. [P0] Issue title
 **File:** `path/to/file:line`
-**Review type** architecture, security
+**Review type:** architecture(anthropic), security(openai)
 
 Description and why it matters.
 
@@ -155,7 +195,7 @@ gh api repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/reviews \
 
 | Priority | Issue | Location | Review type |
 |----------|-------|----------|------------|
-| P0 | ... | file:line | review-type |
+| P0 | ... | file:line | code-quality(openai) |
 
 ### Recommendation
 [Concise recommendation]' \
@@ -166,7 +206,7 @@ gh api repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/reviews \
       "path": "path/to/file.ts",
       "line": 42,
       "side": "RIGHT",
-      "body": "**[P0] Issue Title** (review type: code-quality)\n\nDescription.\n\n**Suggested fix:**\n```\ncode\n```"
+      "body": "**[P0] Issue Title** (review type: code-quality(openai))\n\nDescription.\n\n**Suggested fix:**\n```\ncode\n```"
     }
   ]
 }
@@ -180,4 +220,4 @@ Requirements for the API call:
 - `side` = `RIGHT` for new/modified code, `LEFT` for deleted code
 - `path` = relative to repo root
 - Only include comments for issues the user selected as "Post comment"
-- Include the category (Architecture, Security, Performance, Code Quality, Correctness) in each comment
+- Include the review type with provider (e.g., `code-quality(openai)`, `security(anthropic)`) in each comment

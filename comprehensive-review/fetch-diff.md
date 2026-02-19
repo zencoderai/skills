@@ -84,6 +84,16 @@ You will receive:
 
 Look at the list of changed files. If any `.md` files are present in the diff, read their contents as they may contain requirements or design docs that provide additional context.
 
+### Step 3: Assess complexity
+
+Evaluate the PR complexity based on the diff and metadata gathered above. **Only consider changes to production/implementation code** — exclude test files (e.g., `*_test.*`, `*.test.*`, `*.spec.*`, `**/test/**`, `**/tests/**`, `**/__tests__/**`) and documentation files (e.g., `*.md`) when counting lines changed and files changed. Classify as one of:
+
+- **simple**: Small, focused change. Typically ≤ 100 lines of implementation code changed across ≤ 3 non-test/non-doc files, single concern (e.g., bug fix, config tweak, copy change, dependency bump, simple refactor).
+- **medium**: Moderate change. Typically 100–500 lines of implementation code changed or 4–10 non-test/non-doc files, may touch multiple modules but follows a clear pattern (e.g., adding a new endpoint, refactoring a module, implementing a straightforward feature).
+- **hard**: Large or complex change. Typically > 500 lines of implementation code changed or > 10 non-test/non-doc files, or involves architectural changes, cross-cutting concerns, new subsystems, complex business logic, security-sensitive code, or significant API surface changes. Any change that is hard to reason about or has high blast radius.
+
+Use the PR metadata (additions, deletions, changedFiles) combined with qualitative assessment of the diff content, but filter out test and documentation files from the quantitative metrics. The qualitative assessment matters more than raw numbers — a 200-line architectural change can be "hard" while a 600-line generated migration can be "simple".
+
 ## Required Output
 
 Return the following structured information:
@@ -91,6 +101,7 @@ Return the following structured information:
 1. **Diff file path**: The absolute path to the saved diff file (e.g., `/tmp/review-diff-<branch-name>.patch`)
 2. **Title**: The PR title (PR mode) or a summary derived from commit messages (local mode)
 3. **Description**: A comprehensive task description that combines all gathered requirements, acceptance criteria, constraints, and context. This should be thorough enough for reviewers to understand the full intent of the change.
+4. **Complexity**: One of `simple`, `medium`, or `hard`
 
 Format your response exactly as:
 
@@ -100,6 +111,9 @@ Format your response exactly as:
 ### Description
 <task description>
 
+### Complexity
+<simple|medium|hard>
+
 ### Diff
-<link to file containing the diff
+<link to file containing the diff>
 ```
