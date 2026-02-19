@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: "Comprehensive code review using parallel specialized subagents. Use when the user wants a thorough code review covering architecture, security, performance, code quality, requirements compliance, and bugs. Works with GitHub PR links OR local branch changes. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes. Triggers: 'comprehensive review', 'full code review', 'review this PR thoroughly', 'review my changes', or when user shares a PR URL and asks for a thorough review."
+description: "Comprehensive code review using parallel specialized subagents. Use when you want a thorough code review covering architecture, security, performance, code quality, requirements compliance, and bugs. Works with GitHub PR links OR local branch changes. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes."
 disable-model-invocation: true
 metadata:
   version: 1.0.0
