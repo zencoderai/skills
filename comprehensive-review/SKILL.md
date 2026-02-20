@@ -80,7 +80,7 @@ For **medium** PRs, launch **6 parallel subagent calls** — one per review crit
 
 **IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
 
-If available use `zen_subagents__spawn_subagent` tool. Use complexity=hard. Prefer `anthropic` and `openai` providers if they are available.
+If available use `zen_subagents__spawn_subagent` tool. Use complexity=hard. Prefer `anthropic` and `openai` providers if they are available. Use different providers for different criteria if possible to get diverse perspectives.
 If `zen_subagents__spawn_subagent` is not available, use any other tool to run subagent or task. Use most capable model available.
 
 Construct prompts for subagents as follows:
