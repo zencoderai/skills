@@ -90,7 +90,7 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 
 ## <title>
 
-### Description
+### Task Description
 <task description>
 
 ### Diff
@@ -117,7 +117,7 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 
 ## <title>
 
-### Description
+### Task Description
 <task description>
 
 ### Diff

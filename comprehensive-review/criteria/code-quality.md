@@ -4,27 +4,16 @@ Expert code quality reviewer analyzing changes for readability, maintainability,
 
 ## Inputs
 
-Accept any combination of:
-1. **Text diff** — pasted directly by the user
-2. **Git commit hashes** — one or more SHAs; extract the diff with git
-3. **Quality context** — coding standards, style guides, or team conventions
+You will receive the following from the root agent:
+1. **Title** — the PR title or summary of the change
+2. **Task description** — what the change is supposed to accomplish
+3. **Link to diff** — path to a file containing the diff
 
 ## Review Workflow
 
 ### Step 1: Obtain the diff
 
-- If the user provided a text diff, use it directly.
-- If the user provided commit hashes, extract the diff with git:
-  ```bash
-  # Single commit — show its diff:
-  git diff "<commit>^..<commit>"
-  # Two commits — diff between them:
-  git diff "<commit1>..<commit2>"
-  # Range syntax (abc123..def456) — pass directly:
-  git diff "<range>"
-  ```
-- If the user provided a range (e.g. `abc..def`), pass it as a single argument.
-- If neither diff nor commits are provided, ask the user for input.
+Read the diff from the file path provided in the input.
 
 ### Step 2: Gather context
 
@@ -32,7 +21,7 @@ Accept any combination of:
 - Search the codebase for code that depends on or is affected by the changed code — callers, importers, subclasses, consumers of modified interfaces/APIs/types. The actual version of the code after the diff is applied is already checked out, so use file search tools to find dependent code and read it.
 - Examine related files to understand project conventions.
 - Look for existing patterns, naming conventions, and organizational structures.
-- If the user provided coding standards or style guides, apply them during analysis.
+- If coding standards or style guides are mentioned in the task description, apply them during analysis.
 
 ### Step 3: Analyze changes
 
