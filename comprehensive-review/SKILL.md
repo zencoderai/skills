@@ -34,8 +34,8 @@ Review mode: <PR mode or Local mode>
 <If PR mode: Owner: <OWNER>, Repo: <REPO>, PR Number: <PR_NUMBER>>
 ```
 
-If available use `ZencoderSubagent` tool. Use provider=anthropic and highest complexity if complexity and provider options are available.
-If `ZencoderSubagent` is not available, use any other tool to run subagent or task. Use most capable model available.
+If available use `zen_subagents__spawn_subagent` tool. Use provider=anthropic and highest complexity if complexity and provider options are available.
+If `zen_subagents__spawn_subagent` is not available, use any other tool to run subagent or task. Use most capable model available.
 
 The subagent will return:
 - **Diff file path**: path to the saved diff file
@@ -80,8 +80,8 @@ For **medium** PRs, launch **6 parallel subagent calls** — one per review crit
 
 **IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
 
-If available use `ZencoderSubagent` tool. Use complexity=hard. Prefer `anthropic` and `openai` providers if they are available.
-If `ZencoderSubagent` is not available, use any other tool to run subagent or task. Use most capable model available.
+If available use `zen_subagents__spawn_subagent` tool. Use complexity=hard. Prefer `anthropic` and `openai` providers if they are available.
+If `zen_subagents__spawn_subagent` is not available, use any other tool to run subagent or task. Use most capable model available.
 
 Construct prompts for subagents as follows:
 
@@ -107,8 +107,8 @@ For **hard** PRs, launch **2 parallel subagent calls per criterion** (12 total) 
 
 **Provider selection**: Choose exactly 2 providers from those available. Prefer `anthropic` and `openai`. If only one of them is available, pair it with whatever other provider is available. If neither is available, pick any 2 available providers. If only 1 provider is available, use it for all 6 calls (fall back to Strategy B behavior).
 
-If available use `ZencoderSubagent` tool. Use complexity=hard.
-If `ZencoderSubagent` is not available, use any other tool to run subagent or task. Use most capable model available.
+If available use `zen_subagents__spawn_subagent` tool. Use complexity=hard.
+If `zen_subagents__spawn_subagent` is not available, use any other tool to run subagent or task. Use most capable model available.
 
 For each of the 6 criteria, launch 2 subagent calls (one per selected provider) with the same prompt:
 
