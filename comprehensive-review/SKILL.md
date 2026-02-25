@@ -30,7 +30,7 @@ Construct the subagent prompt as follows:
 ```
 Read the file `<SKILL_DIRECTORY>/fetch-diff.md` for detailed instructions, then follow them.
 
-Review mode: <PR mode or Local mode>
+Mode: <PR mode or Local mode>
 <If PR mode: Owner: <OWNER>, Repo: <REPO>, PR Number: <PR_NUMBER>>
 ```
 

@@ -1,11 +1,11 @@
 # Fetch Diff Subagent
 
-Gather change details, save the diff to a file, and return structured information about the change. Investigate PR data thoroughly to extract the full task description with all requirements.
+Gather change details, save the diff to a file, and return structured information about the change. The task description must only be derived from: PR description, PR comments, commit messages, and committed `.md` files. Never infer the description from code changes.
 
 ## Inputs
 
 You will receive:
-- **Review mode**: either "PR mode" (with owner, repo, PR number) or "Local mode"
+- **Mode**: either "PR mode" (with owner, repo, PR number) or "Local mode"
 
 ## Workflow
 
@@ -18,28 +18,7 @@ You will receive:
    gh pr view <PR_NUMBER> --repo <OWNER>/<REPO> --json title,body,commits,headRefName,headRefOid,baseRefName,additions,deletions,changedFiles,files,comments
    ```
 
-2. Thoroughly examine the PR to extract the full task description:
-   - Read the PR body carefully for requirements, acceptance criteria, and linked issues.
-   - If the PR body references an issue (e.g., "Fixes #123", "Closes #456", "Related to #789"), fetch that issue to get the full task description:
-     ```bash
-     gh issue view <ISSUE_NUMBER> --repo <OWNER>/<REPO> --json title,body,comments
-     ```
-   - Check PR comments for additional context, clarifications, or updated requirements:
-     ```bash
-     gh pr view <PR_NUMBER> --repo <OWNER>/<REPO> --json comments,reviews,reviewRequests
-     ```
-   - Look at commit messages for additional intent details:
-     ```bash
-     gh pr view <PR_NUMBER> --repo <OWNER>/<REPO> --json commits
-     ```
-   - Combine all gathered information into a comprehensive task description that includes all requirements, constraints, and acceptance criteria.
-
-3. Save the diff:
-   ```bash
-   gh pr diff <PR_NUMBER> --repo <OWNER>/<REPO> > /tmp/review-diff-<branch-name>.patch
-   ```
-
-4. Checkout the correct branch. Try the following strategies in order until one succeeds:
+2. Checkout the correct branch. Try the following strategies in order until one succeeds:
 
    a. **`gh pr checkout`** (preferred):
       ```bash
@@ -58,6 +37,24 @@ You will receive:
 
    If all strategies fail, include an error in your response.
 
+3. Extract the task description from the following sources only (never infer from code):
+   - **PR description**: Read the PR body for requirements, acceptance criteria, and context.
+   - **PR comments**: Check PR comments for additional context, clarifications, or updated requirements:
+     ```bash
+     gh pr view <PR_NUMBER> --repo <OWNER>/<REPO> --json comments,reviews,reviewRequests
+     ```
+   - **Commit messages**: Look at commit messages for additional intent details:
+     ```bash
+     gh pr view <PR_NUMBER> --repo <OWNER>/<REPO> --json commits
+     ```
+   - **Committed `.md` files**: Check the list of changed files from PR metadata. If any `.md` files are present, read their full committed contents as they may contain requirements or design docs.
+   - Combine the PR description, PR comments, commit messages, and any committed `.md` files into a comprehensive task description. Do not supplement with information inferred from the code diff.
+
+4. Save the diff:
+   ```bash
+   gh pr diff <PR_NUMBER> --repo <OWNER>/<REPO> > /tmp/review-diff-<branch-name>.patch
+   ```
+
 #### Local mode
 
 1. Detect the current branch and its merge base:
@@ -75,14 +72,14 @@ You will receive:
    cat /tmp/review-diff-committed-<branch-name>.patch /tmp/review-diff-uncommitted-<branch-name>.patch > /tmp/review-diff-<branch-name>.patch
    ```
 
-3. Gather task description from commit messages on the branch:
+3. Gather task description from commit messages on the branch (do not infer from code):
    ```bash
    git log --format="%s%n%b" $MERGE_BASE..HEAD
    ```
 
-### Step 2: Check for requirements in the diff
+### Step 2: Check for requirements in committed `.md` files
 
-Look at the list of changed files. If any `.md` files are present in the diff, read their contents as they may contain requirements or design docs that provide additional context.
+Look at the list of changed files. If any `.md` files are present in the diff, read their full committed contents as they may contain requirements or design docs that are part of the task description.
 
 ### Step 3: Assess complexity
 
@@ -100,7 +97,7 @@ Return the following structured information:
 
 1. **Diff file path**: The absolute path to the saved diff file (e.g., `/tmp/review-diff-<branch-name>.patch`)
 2. **Title**: The PR title (PR mode) or a summary derived from commit messages (local mode)
-3. **Description**: A comprehensive task description that combines all gathered requirements, acceptance criteria, constraints, and context. This should be thorough enough for reviewers to understand the full intent of the change.
+3. **Description**: A comprehensive task description derived only from the PR description, PR comments, commit messages, and committed `.md` files. Never infer or supplement the description from the code diff. This should be thorough enough for reviewers to understand the full intent of the change.
 4. **Complexity**: One of `simple`, `medium`, or `hard`
 
 Format your response exactly as:
