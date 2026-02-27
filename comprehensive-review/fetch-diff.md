@@ -95,7 +95,7 @@ Use the PR metadata (additions, deletions, changedFiles) combined with qualitati
 
 Return the following structured information:
 
-1. **Diff file path**: The absolute path to the saved diff file (e.g., `/tmp/review-diff-<branch-name>.patch`)
+1. **Diff file path**: The absolute path to the saved diff file (e.g., `/tmp/review-diff-<branch-name>.patch`). MUST be an absolute path starting with `/`.
 2. **Title**: The PR title (PR mode) or a summary derived from commit messages (local mode)
 3. **Description**: A comprehensive task description derived only from the PR description, PR comments, commit messages, and committed `.md` files. Never infer or supplement the description from the code diff. This should be thorough enough for reviewers to understand the full intent of the change.
 4. **Complexity**: One of `simple`, `medium`, or `hard`
@@ -112,5 +112,5 @@ Format your response exactly as:
 <simple|medium|hard>
 
 ### Diff
-<link to file containing the diff>
+<absolute path to the diff file, e.g. /tmp/review-diff-feature.patch>
 ```

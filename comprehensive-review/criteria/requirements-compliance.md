@@ -7,7 +7,7 @@ Expert requirements compliance reviewer analyzing code changes for deviations fr
 You will receive the following from the root agent:
 1. **Title** — the PR title or summary of the change
 2. **Task description** — what the change is supposed to accomplish
-3. **Link to diff** — path to a file containing the diff
+3. **Diff file path** — absolute path to a file containing the diff
 
 ## Review Workflow
 

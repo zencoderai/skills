@@ -37,12 +37,12 @@ Mode: <PR mode or Local mode>
 Use a subagent tool to spawn the subagent. Use a cheap/fast model since this is a data-gathering task that doesn't require deep reasoning.
 
 The subagent will return:
-- **Diff file path**: path to the saved diff file
+- **Diff file path**: absolute path to the saved diff file (must start with `/`, e.g. `/tmp/review-diff-feature.patch`)
 - **Title**: the PR title or summary from commits
 - **Description**: comprehensive task description with all requirements
 - **Complexity**: one of `simple`, `medium`, or `hard`
 
-Save these values for use in subsequent steps.
+Remember these values for use in subsequent steps.
 
 ### Step 3: Clarify requirements (if needed)
 
@@ -92,10 +92,10 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 <task description>
 
 ### Diff
-<link to file containing the diff>
+Read the diff from file: <absolute path to diff file>
 ```
 
-Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
+Where `<INSTRUCTION_FILE>` is the absolute path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
 
 #### Strategy C: Hard complexity
 
@@ -119,10 +119,10 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 <task description>
 
 ### Diff
-<link to file containing the diff>
+Read the diff from file: <absolute path to diff file>
 ```
 
-Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
+Where `<INSTRUCTION_FILE>` is the absolute path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
 
 All 12 calls should be launched in parallel.
 
