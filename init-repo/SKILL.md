@@ -1,13 +1,13 @@
 ---
 name: init-repo
-description: "Initialize a repository with an AGENTS.md contributor guide by analyzing project structure, build commands, coding conventions, and git history. Uses parallel multi-provider analysis via ZencoderSubagent for comprehensive coverage. Use when the user asks to initialize a repo, create AGENTS.md, generate contributor guidelines, or set up agent-oriented documentation for a codebase."
+description: "Initialize a repository with an AGENTS.md contributor guide by analyzing project structure, build commands, coding conventions, and git history. Use when the user asks to initialize a repo, create AGENTS.md, generate contributor guidelines, or set up agent-oriented documentation for a codebase."
 metadata:
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 # Repository Initialization — AGENTS.md Generator
 
-Analyze a codebase and generate a concise, accurate `AGENTS.md` contributor guide using parallel multi-provider drafting and best-of merge.
+Analyze a codebase and generate a concise, accurate `AGENTS.md` contributor guide.
 
 **Target:** $ARGUMENTS or the current working directory.
 
@@ -15,21 +15,15 @@ Analyze a codebase and generate a concise, accurate `AGENTS.md` contributor guid
 
 ## Phase 1 — Probe the Codebase
 
-Gather raw facts into a structured temp file. **Never invent information — only record what is actually found.**
-
-Determine a short repo name from the directory or `git remote get-url origin`. Save all output to `/tmp/init-repo-probe-{repo-name}.md`.
+Gather raw facts about the repository. **Only record what is actually found — never invent information.**
 
 ### 1.1 File tree
 
-```bash
-find . -maxdepth 3 -not -path '*/.git/*' -not -path '*/node_modules/*' -not -path '*/dist/*' -not -path '*/build/*' -not -path '*/__pycache__/*' -not -path '*/.venv/*' | head -200
-```
-
-Record the output under a `## File Tree` heading.
+Map the repo structure (3 levels deep, excluding .git, node_modules, dist, build, __pycache__, .venv). This is analysis input — the output AGENTS.md should describe non-obvious architecture, not list directories. Focus on the "big picture" architecture that requires reading multiple files to understand.
 
 ### 1.2 Build, test, and dev commands
 
-Search for and extract command definitions from these sources (skip any that don't exist):
+Extract actual command definitions from these sources (skip any that don't exist):
 
 | Source | What to extract |
 |--------|----------------|
@@ -39,8 +33,6 @@ Search for and extract command definitions from these sources (skip any that don
 | `Cargo.toml` | `[[bin]]` entries, workspace members |
 | `go.mod` | Module path |
 | `docker-compose.yml` | Service names |
-
-Record under `## Build & Commands`.
 
 ### 1.3 Coding conventions
 
@@ -52,140 +44,92 @@ Check for and record the presence and key settings of:
 - Agent rules: `.cursorrules`, `.cursor/rules/`, `.github/copilot-instructions.md`
 - Pre-commit hooks: `.husky/`, `.pre-commit-config.yaml`, `.githooks/`
 
-If `.cursorrules` or `.github/copilot-instructions.md` exist, include their full content.
-
-Record under `## Coding Conventions`.
+If agent rules files exist, read them and extract the important parts (not verbatim — focus on conventions and rules that matter for code generation).
 
 ### 1.4 Git history
 
-```bash
-git log --oneline -20 --no-decorate
-```
+Review the last 20 commits to identify commit message conventions and patterns.
 
-Record under `## Recent Commits`. If this fails (not a git repo or shallow clone), note the limitation.
+If this fails (not a git repo or shallow clone), note the limitation and skip.
 
 ### 1.5 README and existing docs
 
-If `README.md` exists, include its full content under `## README`.
-
-If `AGENTS.md` already exists, include it under `## Existing AGENTS.md` and set a flag: `IMPROVEMENT_MODE=true`.
-
-If `CLAUDE.md` exists, include it under `## Existing CLAUDE.md`.
-
-### 1.6 Finalize probe file
-
-Verify `/tmp/init-repo-probe-{repo-name}.md` is written and non-empty before proceeding.
+- If `README.md` exists, read it for context about the repo's purpose and setup.
+- If `AGENTS.md` already exists, read it — you'll be improving it rather than starting fresh.
+- If `CLAUDE.md` exists, read it for additional context.
 
 ---
 
-## Phase 2 — Parallel Multi-Provider Drafting
+## Phase 2 — Generate AGENTS.md
 
-Launch one `ZencoderSubagent` per available provider that supports `hard` complexity. Each receives the same prompt:
+Using the gathered facts, write the AGENTS.md document.
 
-```
-You are generating an AGENTS.md file for a code repository. Below are raw facts gathered from the codebase.
+### Document requirements
 
-CRITICAL RULES:
-- Only include information directly supported by the facts below
-- Never invent commands, file paths, or conventions not found in the facts
-- If a section has no supporting evidence, omit it entirely
-- Keep the total document between 200-400 words
-- Be specific to THIS repository — no generic advice
+- Title: `# Repository Guidelines`
+- 200-400 words (exceed only if the repository's complexity genuinely demands it)
+- Direct, instructional tone
+- Do not repeat yourself across sections
 
-DOCUMENT FORMAT:
-- Title: "# Repository Guidelines"
-- Use ## headings for sections
-- Keep explanations short, direct, and actionable
-- Include actual commands, not descriptions of what commands might exist
+### Sections to include (omit any that don't apply)
 
-SECTIONS (include only if evidence exists in the facts):
+**## Project Structure & Module Organization**
+Focus on architecture that requires reading multiple files to understand. Omit anything a developer would learn by opening a single file.
 
-## Project Structure & Module Organization
-Outline where source code, tests, and assets live. Focus on non-obvious structure.
+**## Build, Test, and Development Commands**
+List actual commands from the build system. Include how to run a single test. Briefly explain what each does.
 
-## Build, Test, and Development Commands
-List actual commands from the build system. Briefly explain what each does.
-
-## Coding Style & Naming Conventions
+**## Coding Style & Naming Conventions**
 Specify enforced rules from linter/formatter configs. Include tool names.
 
-## Testing Guidelines
-Identify test framework, how to run tests (including a single test), coverage requirements.
+**## Testing Guidelines**
+Identify test framework, how to run tests, coverage requirements if any.
 
-## Commit & Pull Request Guidelines
-Derive commit message conventions from the git history. Note any PR templates.
+**## Commit & Pull Request Guidelines**
+Derive commit message conventions from the actual git history. Note any PR templates.
 
 Add other sections only if the facts strongly support them (e.g., Architecture Overview, Security, Agent Instructions).
 
-{IF IMPROVEMENT_MODE}
-An existing AGENTS.md is included in the facts. Improve it: fix inaccuracies, fill gaps, remove generic advice, and ensure all commands are current. Preserve any correct, specific content.
-{END IF}
+### What to NEVER include
 
---- CODEBASE FACTS ---
-<contents of /tmp/init-repo-probe-{repo-name}.md>
-```
+Do not include obvious instructions or generic development practices such as:
+- "Provide helpful error messages to users"
+- "Write unit tests for all new utilities"
+- "Never include sensitive information (API keys, tokens) in code or commits"
+- "Use meaningful variable names"
 
-Save each provider's response to `/tmp/init-repo-draft-{provider}.md`.
+Do not invent sections like "Common Development Tasks", "Tips for Development", "Support and Documentation" unless the repo's own documentation expressly contains them.
 
----
+Do not list every component or file in the repository — only document what is non-obvious.
 
-## Phase 3 — Best-of Merge
+### If improving an existing AGENTS.md
 
-Compare all provider drafts section by section:
+Fix inaccuracies, fill gaps, remove generic advice, and ensure all commands are current. Preserve any correct, specific content. Present the diff to the user and ask to confirm before overwriting.
 
-1. **For each section** present in any draft:
-   - Pick the version that is most specific and accurate (contains real commands, real paths)
-   - Between equally specific versions, prefer the more concise one
-   - If only one provider included the section, use it if it's supported by probe facts
-   - If a section contains invented information (not in probe facts), discard it
+### If creating a new AGENTS.md
 
-2. **Assemble** the merged sections into a single document with:
-   - Title: `# Repository Guidelines`
-   - Consistent heading levels and formatting
-   - No repeated information across sections
-
-3. **Validate** the merged result:
-   - Total length: 200-400 words
-   - Every command mentioned exists in the probe facts
-   - Every file path mentioned exists in the file tree
-   - No generic advice ("always write tests", "use meaningful names", etc.)
-   - No invented sections
-
-4. **Trim** if over 400 words — cut the least specific content first.
+Write the file directly to the repository root. No confirmation needed.
 
 ---
 
-## Phase 4 — Confirm and Write
+## Phase 3 — Validate
 
-### If IMPROVEMENT_MODE (existing AGENTS.md found):
+Before finalizing, verify:
 
-Present the diff between the existing and new version. Ask the user to confirm before overwriting:
-
-```
-I've generated an improved AGENTS.md. Here are the changes:
-<diff>
-Should I apply these changes?
-```
-
-### If new file:
-
-Present the complete AGENTS.md content and ask for confirmation before writing.
-
-### Write
-
-Save the final `AGENTS.md` to the repository root.
-
-Clean up temp files:
-```bash
-rm -f /tmp/init-repo-probe-*.md /tmp/init-repo-draft-*.md
-```
+- Every command mentioned actually exists in the build system
+- Every file path mentioned exists in the repo
+- No generic advice slipped in
+- No repeated information across sections
+- The document stays within the target word count
+- Cursor/Copilot rules are incorporated (important parts woven into relevant sections, not dumped verbatim)
 
 ---
 
 ## Guidelines
 
-- **Never fabricate** — if a section has no evidence, omit it
+- **Never fabricate** — if a section has no evidence, omit it entirely
 - **Prefer commands over prose** — `npm test` over "run the test suite"
-- **Incorporate agent rules** — if .cursorrules or copilot instructions exist, weave their important parts into the relevant sections
+- **Big picture only** — document architecture that spans multiple files, skip the obvious
+- **Incorporate agent rules** — weave important parts of .cursorrules or copilot instructions into relevant sections
 - **Respect existing work** — in improvement mode, preserve correct specific content
-- **Stay under 400 words** — conciseness is the primary quality signal
+- **Conciseness is quality** — every sentence must earn its place
