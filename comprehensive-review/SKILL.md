@@ -34,8 +34,7 @@ Mode: <PR mode or Local mode>
 <If PR mode: Owner: <OWNER>, Repo: <REPO>, PR Number: <PR_NUMBER>>
 ```
 
-If available use `zen_subagents__spawn_subagent` tool. Use provider=anthropic and highest complexity if complexity and provider options are available.
-If `zen_subagents__spawn_subagent` is not available, use any other tool to run subagent or task. Use most capable model available.
+Use a subagent tool to spawn the subagent. Use a cheap/fast model since this is a data-gathering task that doesn't require deep reasoning.
 
 The subagent will return:
 - **Diff file path**: path to the saved diff file
@@ -80,8 +79,7 @@ For **medium** PRs, launch **6 parallel subagent calls** — one per review crit
 
 **IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
 
-If available use `zen_subagents__spawn_subagent` tool. Use complexity=hard. Prefer `anthropic` and `openai` providers if they are available. Use different providers for different criteria if possible to get diverse perspectives.
-If `zen_subagents__spawn_subagent` is not available, use any other tool to run subagent or task. Use most capable model available.
+Use a subagent tool to spawn each subagent. Use a powerful models. Use different models from different providers for different criteria if possible to get diverse perspectives.
 
 Construct prompts for subagents as follows:
 
@@ -101,16 +99,16 @@ Where `<INSTRUCTION_FILE>` is the full path to the instruction file (e.g. `<SKIL
 
 #### Strategy C: Hard complexity
 
-For **hard** PRs, launch **2 parallel subagent calls per criterion** (12 total) — one per criterion per provider, using 2 different providers for diverse perspectives.
+For **hard** PRs, launch **2 parallel subagent calls per criterion** (12 total) — one per criterion per model, using 2 different models from different providers for diverse perspectives.
 
 **IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
 
-**Provider selection**: Choose exactly 2 providers from those available. Prefer `anthropic` and `openai`. If only one of them is available, pair it with whatever other provider is available. If neither is available, pick any 2 available providers. If only 1 provider is available, use it for all 6 calls (fall back to Strategy B behavior).
+**Model selection**: Choose exactly 2 powerful models from different providers. If only 1 provider is available, use it for all 6 calls (fall back to Strategy B behavior).
 
-If available use `zen_subagents__spawn_subagent` tool. Use complexity=hard.
-If `zen_subagents__spawn_subagent` is not available, use any other tool to run subagent or task. Use most capable model available.
+Use a subagent tool to spawn each subagent.
 
-For each of the 6 criteria, launch 2 subagent calls (one per selected provider) with the same prompt:
+For each of the 6 criteria, launch 2 subagent using powerful models from different providers. 
+Use following prompt:
 
 ```
 Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow them to review the following change.
@@ -134,7 +132,7 @@ Compile all findings into a single deduplicated list. For **simple** PRs, you al
 
 1. Collect all findings from each review (self-review or subagent responses).
 2. Group findings by file and line number.
-3. Merge issues that describe the same problem (same file, similar line range, same category). When merging, combine their review types. For **hard** PRs, findings from different providers on the same criterion that agree strengthen confidence; findings from only one provider should be noted as lower confidence.
+3. Merge issues that describe the same problem (same file, similar line range, same category). When merging, combine their review types. For **hard** PRs, findings from different models on the same criterion that agree strengthen confidence; findings from only one model should be noted as lower confidence.
 4. Keep the best description and suggested fix from among duplicates.
 5. Sort by priority (P0 first), then by file path.
 6. Filter out any false positives (if a subagent itself said that it's not a real issue or you're 100% sure it's not a real issue).
@@ -144,15 +142,15 @@ Compile all findings into a single deduplicated list. For **simple** PRs, you al
 
 | # | Priority | Issue | File:Line | Review type |
 |---|----------|-------|-----------|------------|
-| 1 | P0 | Description | path:line | architecture(anthropic), security(openai) |
-| 2 | P1 | Description | path:line | bugs(anthropic) |
+| 1 | P0 | Description | path:line | architecture(opus-4-6-think), security(gpt-5-3-codex) |
+| 2 | P1 | Description | path:line | bugs(opus-4-6-think) |
 | ... | | | | |
 
 ### Details
 
 #### 1. [P0] Issue title
 **File:** `path/to/file:line`
-**Review type:** architecture(anthropic), security(openai)
+**Review type:** architecture(opus-4-6-think), security(gpt-5-3-codex)
 
 Description and why it matters.
 
@@ -196,7 +194,7 @@ gh api repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/reviews \
 
 | Priority | Issue | Location | Review type |
 |----------|-------|----------|------------|
-| P0 | ... | file:line | code-quality(openai) |
+| P0 | ... | file:line | code-quality(gpt-5-3-codex) |
 
 ### Recommendation
 [Concise recommendation]' \
@@ -207,7 +205,7 @@ gh api repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/reviews \
       "path": "path/to/file.ts",
       "line": 42,
       "side": "RIGHT",
-      "body": "**[P0] Issue Title** (review type: code-quality(openai))\n\nDescription.\n\n**Suggested fix:**\n```\ncode\n```"
+      "body": "**[P0] Issue Title** (review type: code-quality(gpt-5-3-codex))\n\nDescription.\n\n**Suggested fix:**\n```\ncode\n```"
     }
   ]
 }
@@ -221,4 +219,4 @@ Requirements for the API call:
 - `side` = `RIGHT` for new/modified code, `LEFT` for deleted code
 - `path` = relative to repo root
 - Only include comments for issues the user selected as "Post comment"
-- Include the review type with provider (e.g., `code-quality(openai)`, `security(anthropic)`) in each comment
+- Include the review type with model name (e.g., `code-quality(gpt-5-3-codex)`, `security(opus-4-6-think)`) in each comment
