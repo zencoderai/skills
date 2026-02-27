@@ -1,5 +1,5 @@
 ---
-name: init-repo
+name: init
 description: "Initialize a repository with an AGENTS.md contributor guide by analyzing project structure, build commands, coding conventions, and git history. Use when the user asks to initialize a repo, create AGENTS.md, generate contributor guidelines, or set up agent-oriented documentation for a codebase."
 metadata:
   version: 1.1.0
