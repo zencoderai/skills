@@ -44,11 +44,7 @@ The subagent will return:
 
 Remember these values for use in subsequent steps.
 
-### Step 3: Clarify requirements (if needed)
-
-If the purpose of the change is unclear from the title and description returned by the subagent, ask any clarifying questions to understand the intent. This will help guide the review and flag deviations from intended behavior. Use tool to ask questions if available. Skip this step if the context clearly describes the intent.
-
-### Step 4: Run specialized reviews
+### Step 3: Run specialized reviews
 
 The review strategy depends on the **complexity** returned by the fetch-diff subagent.
 
@@ -126,7 +122,7 @@ Where `<INSTRUCTION_FILE>` is the absolute path to the instruction file (e.g. `<
 
 All 12 calls should be launched in parallel.
 
-### Step 5: Merge results
+### Step 4: Merge results
 
 Compile all findings into a single deduplicated list. For **simple** PRs, you already have all findings from your self-review. For **medium** and **hard** PRs, collect findings from all subagent responses.
 
@@ -160,7 +156,7 @@ code
 \`\`\`
 ```
 
-### Step 6: Ask user how to handle each finding
+### Step 5: Ask user how to handle each finding
 
 Ask questions to let the user decide what to do with each finding:
 
@@ -170,7 +166,7 @@ Ask questions to let the user decide what to do with each finding:
 - Use tool to ask questions if available. Ask all questions with on tool call if tool allows asking multiple questions at once. Otherwise, ask sequentially.
 - If no tool available, ask all questions at once with regular message to user.
 
-### Step 7: Apply fixes for issues marked "Fix"
+### Step 6: Apply fixes for issues marked "Fix"
 
 For each finding the user chose "Fix":
 
@@ -178,7 +174,7 @@ For each finding the user chose "Fix":
 2. Apply the suggested fix (or an appropriate fix if the suggestion is incomplete).
 3. After all fixes are applied, present a summary of changes made.
 
-### Step 8: Post selected issues as PR comments (PR mode only)
+### Step 7: Post selected issues as PR comments (PR mode only)
 
 **Skip this step entirely if no findings were marked "Post comment".**
 
