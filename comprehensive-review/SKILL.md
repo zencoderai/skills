@@ -23,7 +23,7 @@ Check if the user provided a GitHub PR link.
 
 Call a subagent to gather all change details, save the diff, and checkout the correct branch.
 
-**IMPORTANT**: Do NOT read the file `<SKILL_DIRECTORY>/fetch-diff.md` yourself. The subagent must read it.
+**CRITICAL**: You MUST spawn a subagent for this step. Do NOT perform the diff-gathering, branch detection, or complexity assessment yourself. Do NOT read the file `<SKILL_DIRECTORY>/fetch-diff.md` yourself. The subagent must read it and follow its instructions.
 
 Construct the subagent prompt as follows:
 
@@ -77,9 +77,9 @@ For **simple** PRs, perform the review yourself (the root agent) without calling
 
 For **medium** PRs, launch **6 parallel subagent calls** — one per review criterion.
 
-**IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
+**CRITICAL**: You MUST spawn subagents for this step. Do NOT read the criteria instruction files yourself. Do NOT perform the reviews yourself. Each subagent must read its own instruction file.
 
-Use a subagent tool to spawn each subagent. Use a powerful models. Use different models from different providers for different criteria if possible to get diverse perspectives.
+Use a subagent tool to spawn each subagent. Use the most powerful models available. Use different models from different providers for different criteria to get diverse perspectives.
 
 Construct prompts for subagents as follows:
 
@@ -101,9 +101,9 @@ Where `<INSTRUCTION_FILE>` is the absolute path to the instruction file (e.g. `<
 
 For **hard** PRs, launch **2 parallel subagent calls per criterion** (12 total) — one per criterion per model, using 2 different models from different providers for diverse perspectives.
 
-**IMPORTANT**: Do NOT read the criteria instruction files yourself. Each subagent must read its own instruction file.
+**CRITICAL**: You MUST spawn subagents for this step. Do NOT read the criteria instruction files yourself. Do NOT perform the reviews yourself. Each subagent must read its own instruction file.
 
-**Model selection**: Choose exactly 2 powerful models from different providers. If only 1 provider is available, use it for all 6 calls (fall back to Strategy B behavior).
+**Model selection**: Choose exactly 2 of the most powerful models available from different providers. If only 1 provider is available, use it for all 6 calls (fall back to Strategy B behavior).
 
 Use a subagent tool to spawn each subagent.
 
