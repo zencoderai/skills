@@ -138,14 +138,14 @@ Compile all findings into a single deduplicated list. For **simple** PRs, you al
 
 | # | Priority | Issue | File:Line | Review type |
 |---|----------|-------|-----------|------------|
-| 1 | P0 | Description | path:line | architecture(opus-4-6-think), security(gpt-5-3-codex) |
-| 2 | P1 | Description | path:line | bugs(opus-4-6-think) |
+| 1 | P0 | Description | link to specific line in file | architecture(opus-4-6-think), security(gpt-5-3-codex) |
+| 2 | P1 | Description | link to specific line in file | bugs(opus-4-6-think) |
 | ... | | | | |
 
 ### Details
 
 #### 1. [P0] Issue title
-**File:** `path/to/file:line`
+**File:** link to specific line in file
 **Review type:** architecture(opus-4-6-think), security(gpt-5-3-codex)
 
 Description and why it matters.
@@ -190,7 +190,7 @@ gh api repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/reviews \
 
 | Priority | Issue | Location | Review type |
 |----------|-------|----------|------------|
-| P0 | ... | file:line | code-quality(gpt-5-3-codex) |
+| P0 | ... | link to specific line in file | code-quality(gpt-5-3-codex) |
 
 ### Recommendation
 [Concise recommendation]' \

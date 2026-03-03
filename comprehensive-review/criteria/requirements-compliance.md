@@ -120,14 +120,14 @@ Output this format:
 
 | Priority | Issue | Type | Location |
 |----------|-------|------|----------|
-| P0 | Description | Missing Feature | file:line |
-| P1 | Description | Business Rule | file:line |
-| P2 | Description | Spec Deviation | file:line |
+| P0 | Description | Missing Feature | link to specific line in file |
+| P1 | Description | Business Rule | link to specific line in file |
+| P2 | Description | Spec Deviation | link to specific line in file |
 
 ### Details
 
 #### [P0/P1] Issue title
-**File:** `path/to/file.ext:line`
+**File:** link to specific line in file
 **Type:** [Missing Feature | Business Rule | Spec Deviation | Interface Mismatch | Behavioral Gap]
 
 **Description:**

@@ -137,14 +137,14 @@ Output this format:
 
 | Priority | Issue | Complexity/Impact | Location |
 |----------|-------|-------------------|----------|
-| P0 | Description | O(n²) → O(n) | file:line |
-| P1 | Description | +50ms latency | file:line |
-| P2 | Description | Minor | file:line |
+| P0 | Description | O(n²) → O(n) | link to specific line in file |
+| P1 | Description | +50ms latency | link to specific line in file |
+| P2 | Description | Minor | link to specific line in file |
 
 ### Details
 
 #### [P0/P1] Issue title
-**File:** `path/to/file.ext:line`
+**File:** link to specific line in file
 **Type:** [Algorithm | Database | Memory | Concurrency | I/O]
 
 **Description:**

@@ -131,14 +131,14 @@ Output this format:
 
 | Priority | Bug | Type | Location |
 |----------|-----|------|----------|
-| P0 | Description | Logic Error | file:line |
-| P1 | Description | Edge Case | file:line |
-| P2 | Description | State Issue | file:line |
+| P0 | Description | Logic Error | link to specific line in file |
+| P1 | Description | Edge Case | link to specific line in file |
+| P2 | Description | State Issue | link to specific line in file |
 
 ### Details
 
 #### [P0/P1] Issue title
-**File:** `path/to/file.ext:line`
+**File:** link to specific line in file
 **Type:** [Logic Error | Edge Case | State Management | Data Handling | API Contract | Concurrency]
 
 **Description:**

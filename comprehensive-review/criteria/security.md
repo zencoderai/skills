@@ -137,14 +137,14 @@ Output this format:
 
 | Priority | Vulnerability | CWE | Location |
 |----------|--------------|-----|----------|
-| P0 | Description | CWE-XXX | file:line |
-| P1 | Description | CWE-XXX | file:line |
-| P2 | Description | CWE-XXX | file:line |
+| P0 | Description | CWE-XXX | link to specific line in file |
+| P1 | Description | CWE-XXX | link to specific line in file |
+| P2 | Description | CWE-XXX | link to specific line in file |
 
 ### Details
 
 #### [P0/P1] Vulnerability title
-**File:** `path/to/file.ext:line`
+**File:** link to specific line in file
 **CWE:** [CWE-XXX](https://cwe.mitre.org/data/definitions/XXX.html)
 **CVSS Estimate:** [Score if applicable]
 

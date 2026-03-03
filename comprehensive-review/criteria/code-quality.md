@@ -136,14 +136,14 @@ Output this format:
 
 | Priority | Issue | Type | Location |
 |----------|-------|------|----------|
-| P0 | Description | Readability | file:line |
-| P1 | Description | Naming | file:line |
-| P2 | Description | Consistency | file:line |
+| P0 | Description | Readability | link to specific line in file |
+| P1 | Description | Naming | link to specific line in file |
+| P2 | Description | Consistency | link to specific line in file |
 
 ### Details
 
 #### [P0/P1] Issue title
-**File:** `path/to/file.ext:line`
+**File:** link to specific line in file
 **Type:** [Readability | Naming | Complexity | Organization | Duplication]
 
 **Description:**
