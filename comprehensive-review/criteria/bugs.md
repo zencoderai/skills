@@ -112,6 +112,7 @@ Review against two tiers using the checklist below.
 - Trace data flow to identify transformation errors.
 - Think about what happens when things go wrong, not just the happy path.
 - Verify error handling paths are correct, not just present.
+- Do NOT run tests, builds, linters, or type-checks. Your review is based on reading and searching code only.
 
 ### Step 4: Produce the review
 

@@ -32,12 +32,15 @@ Read the file `<SKILL_DIRECTORY>/fetch-diff.md` for detailed instructions, then 
 
 Mode: <PR mode or Local mode>
 <If PR mode: Owner: <OWNER>, Repo: <REPO>, PR Number: <PR_NUMBER>>
+
+IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. All instructions you need are in the file specified above.
 ```
 
 Use a subagent tool to spawn the subagent. Use a cheap/fast model since this is a data-gathering task that doesn't require deep reasoning.
 
 The subagent will return:
 - **Diff file path**: absolute path to the saved diff file (must start with `/`, e.g. `/tmp/review-diff-feature.patch`)
+- **Diff line count**: total number of lines in the diff file
 - **Title**: the PR title or summary from commits
 - **Description**: comprehensive task description with all requirements
 - **Complexity**: one of `simple`, `medium`, or `hard`
@@ -75,7 +78,7 @@ For **medium** PRs, launch **6 parallel subagent calls** — one per review crit
 
 **CRITICAL**: You MUST spawn subagents for this step. Do NOT read the criteria instruction files yourself. Do NOT perform the reviews yourself. Each subagent must read its own instruction file.
 
-Use a subagent tool to spawn each subagent. Use the most powerful models available. Use different models from different providers for different criteria to get diverse perspectives.
+Use a subagent tool to spawn each subagent. Select the single most powerful model from each available provider. Alternate these models across the 6 criteria (e.g., provider A's best model for criteria 1, 3, 5 and provider B's best model for criteria 2, 4, 6). If only 1 provider is available, use its most powerful model for all 6.
 
 Construct prompts for subagents as follows:
 
@@ -88,7 +91,9 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 <task description>
 
 ### Diff
-Read the diff from file: <absolute path to diff file>
+Read the diff from file: <absolute path to diff file> (total lines: <diff line count>)
+
+IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. Do NOT run tests, builds, linters, or type-checks — your review is based on static analysis only. All review instructions are in the file specified above.
 ```
 
 Where `<INSTRUCTION_FILE>` is the absolute path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
@@ -99,11 +104,11 @@ For **hard** PRs, launch **2 parallel subagent calls per criterion** (12 total) 
 
 **CRITICAL**: You MUST spawn subagents for this step. Do NOT read the criteria instruction files yourself. Do NOT perform the reviews yourself. Each subagent must read its own instruction file.
 
-**Model selection**: Choose exactly 2 of the most powerful models available from different providers. If only 1 provider is available, use it for all 6 calls (fall back to Strategy B behavior).
+**Model selection**: Choose exactly 2 models — the single most powerful model from each of 2 different providers. If only 1 provider is available, use its most powerful model for all 12 calls (fall back to Strategy B behavior with 2 calls per criterion).
 
 Use a subagent tool to spawn each subagent.
 
-For each of the 6 criteria, launch 2 subagent using powerful models from different providers. 
+For each of the 6 criteria, launch 2 subagents — one with each model.
 Use following prompt:
 
 ```
@@ -115,7 +120,9 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 <task description>
 
 ### Diff
-Read the diff from file: <absolute path to diff file>
+Read the diff from file: <absolute path to diff file> (total lines: <diff line count>)
+
+IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. Do NOT run tests, builds, linters, or type-checks — your review is based on static analysis only. All review instructions are in the file specified above.
 ```
 
 Where `<INSTRUCTION_FILE>` is the absolute path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
@@ -178,7 +185,18 @@ For each finding the user chose "Fix":
 
 **Skip this step entirely if no findings were marked "Post comment".**
 
-Only applies in PR mode. Use the GitHub reviews API to post line-specific comments for selected issues:
+Only applies in PR mode. Use the GitHub reviews API to post line-specific comments for selected issues.
+
+#### Handling findings not in the diff
+
+The GitHub Reviews API only allows inline comments on lines that appear in the diff. Before constructing the API call:
+
+1. For each finding marked "Post comment", check whether its file and line appear in the diff (using the saved diff file).
+2. If the line **is in the diff**: add it as an inline comment in the `comments` array.
+3. If the line **is NOT in the diff** (file not changed, or line outside changed hunks): find the most suitable line **within the diff** to attach the comment to as an inline comment. Choose a line that is contextually related to the finding (e.g., a nearby changed line in the same file, an import of the affected module, a call site of the affected function, or the first changed line of the most relevant file). Prefix the comment body with a clear note explaining what actually needs to change, e.g.: `"⚠️ This comment is about [file:line] which is outside the diff. The following change is required there:\n\n"` followed by the full finding details. Do NOT silently drop findings and do NOT fall back to the review body text.
+4. **Do NOT merge separate findings** into a single comment unless they refer to the exact same line. Each finding the user marked "Post comment" must produce its own visible comment as an inline comment.
+
+#### API call
 
 ```bash
 gh api repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/reviews \
@@ -216,3 +234,4 @@ Requirements for the API call:
 - `path` = relative to repo root
 - Only include comments for issues the user selected as "Post comment"
 - Include the review type with model name (e.g., `code-quality(gpt-5-3-codex)`, `security(opus-4-6-think)`) in each comment
+- Each finding gets its own comment — do NOT merge multiple findings into one comment even if they are on nearby lines

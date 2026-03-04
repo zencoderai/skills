@@ -93,6 +93,7 @@ Review against two tiers using the checklist below.
 - Distinguish between "requirement not met" and "requirement ambiguous."
 - Consider both functional and non-functional requirements.
 - Trace requirements to implementation to identify gaps.
+- Do NOT run tests, builds, linters, or type-checks. Your review is based on reading and searching code only.
 
 ### Step 4: Produce the review
 
