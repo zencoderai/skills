@@ -27,7 +27,7 @@ Extract from the user's prompt:
 - **Model**: The model ID to use for the subagent. Validate against the available models.
   - If the user-specified model is invalid, automatically choose one of the most powerful available models from a different provider.
 - **Review instructions**: Any text after "Review instructions:" — pass these verbatim to the subagent.
-- **Change scope**: Commit hashes, git range, branch name, or indication to review staged/unstaged changes. If not provided, default to reviewing the latest commit (`HEAD~1..HEAD`).
+- **Change scope**: Any indication of what should be reviewed. If not provided, default to reviewing all changes made by you before that.
 
 ### Step 2: Gather the diff and related context
 
@@ -65,17 +65,9 @@ Collect all information the review subagent will need. Do this in the current ag
 ### Step 3: Spawn the review subagent
 
 Use `spawn_subagent` with:
-- **agent**: `"generic"`
+- **skill**: `"code-review"`
 - **model**: The model extracted from the user's request (validated in Step 1)
-- **prompt**: A comprehensive prompt that includes:
-  1. An explicit instruction to invoke the `code-review` skill via the Skill tool
-  2. The user's review instructions (verbatim)
-  3. The full diff
-  4. Full contents of all changed files (for context)
-  5. Any related context gathered (tests, types, configs)
-  6. A read-only constraint
-
-Prompt template:
+- **prompt**: use following template
 
 ```
 Review the changes below using "code-review" skill.
@@ -105,7 +97,7 @@ IMPORTANT CONSTRAINTS:
 
 ## Additional Context
 
-{any related files, test files, type definitions, or user-provided requirements}
+{links to any related files, test files, type definitions, or user-provided requirements}
 ```
 
 ### Step 4: Relay the result
