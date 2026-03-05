@@ -22,8 +22,7 @@ Use review skill with <model-id> model to review the changes. Review instruction
 ### Step 1: Parse the user request
 
 Extract from the user's prompt:
-- **Model**: The model ID to use for the subagent. Validate against the available models.
-  - If the user-specified model is invalid, automatically choose one of the most powerful available models from a different provider.
+- **Model**: The model ID to use for the subagent.
 - **Review instructions**: Any text after "Review instructions:" — pass these verbatim to the subagent.
 - **Change scope**: Any indication of what should be reviewed. If not provided, default to reviewing all changes made by you during this conversation.
 
