@@ -87,14 +87,6 @@ IMPORTANT CONSTRAINTS:
 {paste the full diff here}
 </diff>
 
-## Changed File Contents
-
-{for each changed file, include:}
-### {file_path}
-\`\`\`
-{full file contents}
-\`\`\`
-
 ## Additional Context
 
 {links to any related files, test files, type definitions, or user-provided requirements}
