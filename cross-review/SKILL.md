@@ -22,13 +22,13 @@ Use review skill with <model-id> model to review the changes. Review instruction
 ### Step 1: Parse the user request
 
 Extract from the user's prompt:
-- **Model**: The model ID to use for the subagent.
+- **Model**: The model ID to use for the subagent. Validate against the available models.
 - **Review instructions**: Any text after "Review instructions:" — pass these verbatim to the subagent.
 - **Change scope**: Any indication of what should be reviewed. If not provided, default to reviewing all changes made by you during this conversation.
 
 ### Step 2: Gather context from your own changes
 
-Collect all information the review subagent will need. Do this in the current agent — do NOT delegate this step. Do NOT use git diff or any git commands to obtain changes.
+Collect all information the review subagent will need. Do this in the current agent — do NOT delegate this step.
 
 You already know what you changed — reconstruct the diff from your own conversation history:
 
@@ -73,7 +73,7 @@ IMPORTANT CONSTRAINTS:
 
 ## Full File Contents
 
-{DO NOT include full file contents as subagent can read them if needed}
+{Do NOT include full file contents as subagent can read them if needed}
 
 ## Additional Context
 
