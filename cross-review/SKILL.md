@@ -52,7 +52,7 @@ You already know what you changed — reconstruct the diff from your own convers
 
 Use `spawn_subagent` with:
 - **skill**: `"code-review"`
-- **model**: The model extracted from the user's request (validated in Step 1)
+- **model**: The model extracted from the user's request.
 - **prompt**: use following template
 
 ```
