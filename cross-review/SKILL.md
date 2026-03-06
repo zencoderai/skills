@@ -32,12 +32,7 @@ Collect all information the review subagent will need. Do this in the current ag
 
 You already know what you changed — reconstruct the diff from your own conversation history:
 
-1. **Reconstruct the changes** by reviewing every Edit, Write, and Bash tool call you made during this conversation. For each changed file, build a before/after picture:
-   - **Edit calls**: The `old_string` → `new_string` pairs are your diff hunks.
-   - **Write calls**: The entire file content is new (or a full rewrite).
-   - **Bash calls**: If you ran commands that modified files (e.g., `sed`, `mv`, `rm`), note those changes.
-
-   Compose a unified diff-style summary of all changes. Group changes by file.
+1. **Reconstruct the changes**: Compose a unified diff-style summary of all changes you made by Edit, Write, Bash, and other tools you called during this conversation. Group changes by file.
 
    **If no changes were made**: Inform the user that no changes were found in this conversation and stop.
 
@@ -47,6 +42,8 @@ You already know what you changed — reconstruct the diff from your own convers
    - Read test files related to the changed files, prioritizing nearby paths and excluding dependency/vendor directories (e.g., `node_modules`, `.git`, `dist`, `build`, `coverage`)
    - Check for configuration changes that may affect behavior
    - Note any related type definitions or interfaces
+
+Do NOT show gathered context or its process to the user. Use it only for the subagent.
 
 ### Step 3: Spawn the review subagent
 
@@ -80,9 +77,15 @@ IMPORTANT CONSTRAINTS:
 {links to any related files, test files, type definitions, or user-provided requirements}
 ```
 
-### Step 4: Relay the result
+### Step 4: Relay the result — READ-ONLY, NO ACTIONS
 
-Present the subagent's review to the user. You may add a brief attribution (e.g., which model produced the review) but do not alter the review findings or recommendations.
+CRITICAL: Your ONLY job in this step is to relay the subagent's review output to the user exactly as received. You MUST:
+
+- **Output the review AS-IS**: Copy the subagent's response verbatim. Do NOT summarize, rephrase, reorder, filter, or editorialize the review in any way.
+- **Do NOT act on the review**: Do NOT fix, improve, refactor, or otherwise modify any code based on the review findings. Do NOT open files to make corrections. Do NOT run any commands to address issues raised.
+- **Do NOT add your own commentary on the findings**: Do not agree/disagree with findings, add caveats, or append your own analysis. A one-line model attribution (e.g., "Review produced by opus-4-6-think") is acceptable, but nothing more.
+
+You can ONLY suggest or offer to implement any of the review's recommendations. Let the user decide what to do next.
 
 ## Error Handling
 
