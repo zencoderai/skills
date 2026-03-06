@@ -123,14 +123,14 @@ Output this format:
 
 | Priority | Issue | Location |
 |----------|-------|----------|
-| P0 | Description | file:line or component |
-| P1 | Description | file:line or component |
-| P2 | Description | file:line or component |
+| P0 | Description | link to specific line in file |
+| P1 | Description | link to specific line in file |
+| P2 | Description | link to specific line in file |
 
 ### Details
 
 #### [P0/P1] Issue title
-**Location:** `path/to/file.ext:line` or `ComponentName`
+**Location:** link to specific line in file
 
 Description of the architectural issue and its systemic impact.
 
