@@ -185,53 +185,35 @@ For each finding the user chose "Fix":
 
 **Skip this step entirely if no findings were marked "Post comment".**
 
-Only applies in PR mode. Use the GitHub reviews API to post line-specific comments for selected issues.
+Only applies in PR mode. Call a subagent to post line-specific comments via the GitHub Reviews API.
 
-#### Handling findings not in the diff
+**CRITICAL**: You MUST spawn a subagent for this step. Do NOT perform the comment posting yourself. Do NOT read the file `<SKILL_DIRECTORY>/post-comments.md` yourself. The subagent must read it and follow its instructions.
 
-The GitHub Reviews API only allows inline comments on lines that appear in the diff. Before constructing the API call:
+Construct the subagent prompt as follows:
 
-1. For each finding marked "Post comment", check whether its file and line appear in the diff (using the saved diff file).
-2. If the line **is in the diff**: add it as an inline comment in the `comments` array.
-3. If the line **is NOT in the diff** (file not changed, or line outside changed hunks): find the most suitable line **within the diff** to attach the comment to as an inline comment. Choose a line that is contextually related to the finding (e.g., a nearby changed line in the same file, an import of the affected module, a call site of the affected function, or the first changed line of the most relevant file). Prefix the comment body with a clear note explaining what actually needs to change, e.g.: `"⚠️ This comment is about [file:line] which is outside the diff. The following change is required there:\n\n"` followed by the full finding details. Do NOT silently drop findings and do NOT fall back to the review body text.
-4. **Do NOT merge separate findings** into a single comment unless they refer to the exact same line. Each finding the user marked "Post comment" must produce its own visible comment as an inline comment.
+```
+Read the file `<SKILL_DIRECTORY>/post-comments.md` for detailed instructions, then follow them.
 
-#### API call
+Owner: <OWNER>
+Repo: <REPO>
+PR Number: <PR_NUMBER>
+Diff file path: <absolute path to diff file>
 
-```bash
-gh api repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/reviews \
-  --method POST \
-  -f event='COMMENT' \
-  -f body='## Comprehensive Code Review
+Findings to post:
 
-### Findings Summary
+<For each finding marked "Post comment", include:>
+### Finding <#>
+- **Priority**: <priority>
+- **Title**: <issue title>
+- **File**: <file path>
+- **Line**: <line number>
+- **Review type**: <review type with model names>
+- **Description**: <description>
+- **Suggested fix**: <suggested fix or "None">
 
-| Priority | Issue | Location | Review type |
-|----------|-------|----------|------------|
-| P0 | ... | link to specific line in file | code-quality(gpt-5-3-codex) |
-
-### Recommendation
-[Concise recommendation]' \
-  --input - << 'EOF'
-{
-  "comments": [
-    {
-      "path": "path/to/file.ts",
-      "line": 42,
-      "side": "RIGHT",
-      "body": "**[P0] Issue Title** (review type: code-quality(gpt-5-3-codex))\n\nDescription.\n\n**Suggested fix:**\n```\ncode\n```"
-    }
-  ]
-}
-EOF
+IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. All instructions you need are in the file specified above.
 ```
 
-Requirements for the API call:
-- Use `/pulls/{PR}/reviews` endpoint (NOT `/pulls/{PR}/comments`)
-- `event` must be `COMMENT`
-- `line` = line number in the NEW version of file (from the diff's `+` side)
-- `side` = `RIGHT` for new/modified code, `LEFT` for deleted code
-- `path` = relative to repo root
-- Only include comments for issues the user selected as "Post comment"
-- Include the review type with model name (e.g., `code-quality(gpt-5-3-codex)`, `security(opus-4-6-think)`) in each comment
-- Each finding gets its own comment — do NOT merge multiple findings into one comment even if they are on nearby lines
+If user added custom notes to a finding, update description and/or suggested fix according to these notes.
+
+Use a subagent tool to spawn the subagent. Use a cheap/fast model since this is a data-posting task that doesn't require deep reasoning.
