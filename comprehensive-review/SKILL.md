@@ -165,13 +165,12 @@ code
 
 ### Step 5: Ask user how to handle each finding
 
-Ask questions to let the user decide what to do with each finding:
+**Skip this step if the user already specified what to do with findings in their initial prompt** (e.g., "fix all issues", "post comments for all P0s", etc.). In that case, proceed directly to Steps 6/7 based on their instructions.
 
-- Use one question per finding, presenting each with its number, priority, and short description.
-- **PR mode options**: "Fix", "Post comment", "Ignore"
-- **Local mode options**: "Fix", "Ignore"
-- Use tool to ask questions if available. Ask all questions with on tool call if tool allows asking multiple questions at once. Otherwise, ask sequentially.
-- If no tool available, ask all questions at once with regular message to user.
+Otherwise, send a single message asking the user which findings to fix or post as comments. List each finding with its number, priority, and short description, and ask the user to reply with their choices.
+
+- **PR mode**: Ask which issues to fix and which to post as PR comments.
+- **Local mode**: Only ask which issues to fix. Do NOT mention posting comments.
 
 ### Step 6: Apply fixes for issues marked "Fix"
 
