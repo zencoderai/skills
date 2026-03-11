@@ -27,16 +27,9 @@ Read the diff from the file path provided in the input.
 
 Review against two tiers using the checklist below.
 
-#### Priority Levels
+**Note:** Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.). Report findings as a flat list. The root agent will filter false positives and assign final priorities after reviewing all findings across all criteria.
 
-| Level | Meaning | Action |
-|-------|---------|--------|
-| P0 | Critical — exploitable vulnerability, data breach risk | Must fix immediately |
-| P1 | Major — significant security weakness, defense gap | Must fix |
-| P2 | Minor — security smell, hardening opportunity | Nice to fix |
-| P3 | Suggestion — defense-in-depth improvement | Optional |
-
-#### Critical Issues (P0–P1)
+#### What to look for — critical issues
 
 **Injection Vulnerabilities:**
 - SQL injection (string concatenation in queries)
@@ -85,7 +78,7 @@ Review against two tiers using the checklist below.
 - Insecure CORS configuration
 - Default credentials or configurations
 
-#### Security Hardening (P2–P3)
+#### What to look for — security hardening
 
 **Defense in Depth:**
 - Missing rate limiting
@@ -135,15 +128,14 @@ Output this format:
 
 ### Findings
 
-| Priority | Vulnerability | CWE | Location |
-|----------|--------------|-----|----------|
-| P0 | Description | CWE-XXX | link to specific line in file |
-| P1 | Description | CWE-XXX | link to specific line in file |
-| P2 | Description | CWE-XXX | link to specific line in file |
+| # | Vulnerability | CWE | Location |
+|---|--------------|-----|----------|
+| 1 | Description | CWE-XXX | link to specific line in file |
+| 2 | Description | CWE-XXX | link to specific line in file |
 
 ### Details
 
-#### [P0/P1] Vulnerability title
+#### 1. Vulnerability title
 **File:** link to specific line in file
 **CWE:** [CWE-XXX](https://cwe.mitre.org/data/definitions/XXX.html)
 **CVSS Estimate:** [Score if applicable]
@@ -166,7 +158,7 @@ corrected code with proper security controls
 
 **Additional mitigations:** [Optional defense-in-depth measures]
 
-(Repeat for each P0/P1 finding. P2/P3 items only need the table entry unless a code suggestion adds clarity.)
+(Repeat for each finding that warrants detail.)
 
 ### Attack Surface Changes
 [Brief assessment of how this change affects the application's attack surface]
@@ -176,10 +168,11 @@ corrected code with proper security controls
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no P0 or P1 findings.
-- Use `REQUEST CHANGES` when P0 or P1 findings exist.
+- Use `APPROVE` only when there are no significant findings.
+- Use `REQUEST CHANGES` when significant findings exist.
 - Use `NEEDS DISCUSSION` when security trade-offs need team/security-team consensus.
 - Include CWE references for all findings when applicable.
-- Provide concrete exploit scenarios for P0/P1 to justify severity.
-- Include secure code fixes for every P0 and P1 finding.
+- Provide concrete exploit scenarios to justify significance.
+- Include secure code fixes for significant findings.
 - Consider both immediate exploitability and chained attack potential.
+- Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).

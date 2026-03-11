@@ -27,16 +27,9 @@ Read the diff from the file path provided in the input.
 
 Review against two tiers using the checklist below.
 
-#### Priority Levels
+**Note:** Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.). Report findings as a flat list. The root agent will filter false positives and assign final priorities after reviewing all findings across all criteria.
 
-| Level | Meaning | Action |
-|-------|---------|--------|
-| P0 | Critical — severely impacts maintainability, impossible to understand | Must fix |
-| P1 | Major — significantly reduces code quality, maintenance burden | Must fix |
-| P2 | Minor — code smell, readability issue, inconsistency | Nice to fix |
-| P3 | Suggestion — polish, style improvement | Optional |
-
-#### Critical Issues (P0–P1)
+#### What to look for — critical issues
 
 **Readability:**
 - Incomprehensible code logic
@@ -74,7 +67,7 @@ Review against two tiers using the checklist below.
 - Unused imports, variables, or functions
 - Copy-paste code with minor variations
 
-#### Quality Improvements (P2–P3)
+#### What to look for — quality improvements
 
 **Clarity:**
 - Nested ternaries that could be if/switch
@@ -134,15 +127,14 @@ Output this format:
 
 ### Findings
 
-| Priority | Issue | Type | Location |
-|----------|-------|------|----------|
-| P0 | Description | Readability | link to specific line in file |
-| P1 | Description | Naming | link to specific line in file |
-| P2 | Description | Consistency | link to specific line in file |
+| # | Issue | Type | Location |
+|---|-------|------|----------|
+| 1 | Description | Readability | link to specific line in file |
+| 2 | Description | Naming | link to specific line in file |
 
 ### Details
 
-#### [P0/P1] Issue title
+#### 1. Issue title
 **File:** link to specific line in file
 **Type:** [Readability | Naming | Complexity | Organization | Duplication]
 
@@ -161,7 +153,7 @@ cleaner, more readable code
 
 **Why this is better:** Brief explanation of the improvement.
 
-(Repeat for each P0/P1 finding. P2/P3 items only need the table entry unless a code suggestion adds significant clarity.)
+(Repeat for each finding that warrants detail.)
 
 ### Positive Aspects
 [Brief mention of things done well — good naming, clear structure, etc.]
@@ -171,10 +163,10 @@ cleaner, more readable code
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no P0 or P1 findings.
-- Use `REQUEST CHANGES` when P0 or P1 findings exist.
+- Use `APPROVE` only when there are no significant findings.
+- Use `REQUEST CHANGES` when significant findings exist.
 - Use `NEEDS DISCUSSION` when quality trade-offs need team consensus.
-- Include improved code examples for every P0 and P1 finding.
+- Include improved code examples for significant findings.
 - Acknowledge positive aspects to provide balanced feedback.
-- P2/P3 findings go in the table; add detail only when code examples help.
 - Focus on maintainability impact, not personal style preferences.
+- Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).

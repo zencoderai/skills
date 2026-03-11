@@ -27,16 +27,9 @@ Read the diff from the file path provided in the input.
 
 Review against two tiers using the checklist below.
 
-#### Priority Levels
+**Note:** Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.). Report findings as a flat list. The root agent will filter false positives and assign final priorities after reviewing all findings across all criteria.
 
-| Level | Meaning | Action |
-|-------|---------|--------|
-| P0 | Critical — required functionality completely missing or fundamentally wrong | Must fix |
-| P1 | Major — significant requirement gap, acceptance criteria not met | Must fix |
-| P2 | Minor — partially met requirement, minor deviation from spec | Nice to fix |
-| P3 | Suggestion — potential improvement to better meet intent | Optional |
-
-#### Critical Issues (P0–P1)
+#### What to look for — critical issues
 
 **Feature Completeness:**
 - Feature not implemented as specified
@@ -66,7 +59,7 @@ Review against two tiers using the checklist below.
 - Error behavior doesn't match requirements
 - Configuration options don't match specification
 
-#### Robustness (P2–P3)
+#### What to look for — robustness
 
 **Requirement Interpretation:**
 - Ambiguous requirements interpreted without clarification
@@ -115,19 +108,18 @@ Output this format:
 |-------------|--------|-------|
 | [Requirement 1] | ✅ Met | — |
 | [Requirement 2] | ⚠️ Partial | Missing X |
-| [Requirement 3] | ❌ Not Met | See P1-002 |
+| [Requirement 3] | ❌ Not Met | See finding #2 |
 
 ### Findings
 
-| Priority | Issue | Type | Location |
-|----------|-------|------|----------|
-| P0 | Description | Missing Feature | link to specific line in file |
-| P1 | Description | Business Rule | link to specific line in file |
-| P2 | Description | Spec Deviation | link to specific line in file |
+| # | Issue | Type | Location |
+|---|-------|------|----------|
+| 1 | Description | Missing Feature | link to specific line in file |
+| 2 | Description | Business Rule | link to specific line in file |
 
 ### Details
 
-#### [P0/P1] Issue title
+#### 1. Issue title
 **File:** link to specific line in file
 **Type:** [Missing Feature | Business Rule | Spec Deviation | Interface Mismatch | Behavioral Gap]
 
@@ -150,7 +142,7 @@ Relevant requirement text or acceptance criteria
 code that would satisfy the requirement
 \```
 
-(Repeat for each P0/P1 finding. P2/P3 items only need the table entry unless detailed analysis adds value.)
+(Repeat for each finding that warrants detail.)
 
 ### Uncovered Requirements
 [List of requirements that could not be verified from the diff alone]
@@ -160,10 +152,11 @@ code that would satisfy the requirement
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no P0 or P1 findings.
-- Use `REQUEST CHANGES` when P0 or P1 findings exist.
+- Use `APPROVE` only when there are no significant findings.
+- Use `REQUEST CHANGES` when significant findings exist.
 - Use `NEEDS DISCUSSION` when requirements are ambiguous and need clarification.
 - Always include the requirements compliance matrix.
 - Reference specific requirements or acceptance criteria in findings.
-- Suggest implementation code for every P0 and P1 finding.
+- Suggest implementation code for significant findings.
 - Focus on requirements compliance, not code style, performance, or bugs (unless they cause requirement violations).
+- Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).

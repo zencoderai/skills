@@ -18,21 +18,22 @@ Do not make assumptions on important decisions — get clarification first.
 
 ## Workflow Steps
 
-### [ ] Step: Implementation
+### [x] Step: Implementation
+<!-- chat-id: 30e49681-3137-46e2-bcb8-adc9dceaacf2 -->
 
-**Debug requests, questions, and investigations:** answer or investigate first. Do not create a plan upfront — the user needs an answer, not a plan. A plan may become relevant later once the investigation reveals what needs to change.
+**Goal**: Move priority assignment from subagents to root agent. Subagents return unprioritized findings; root agent filters false-positives and assigns priorities.
 
-**For all other tasks**, before writing any code, assess the scope of the actual change (not the prompt length — a one-sentence prompt can describe a large feature). Scale your approach:
+**Affected files** (8 total):
+- `comprehensive-review/criteria/architecture.md` — remove priority levels from output format
+- `comprehensive-review/criteria/bugs.md` — same
+- `comprehensive-review/criteria/security.md` — same
+- `comprehensive-review/criteria/performance.md` — same
+- `comprehensive-review/criteria/code-quality.md` — same
+- `comprehensive-review/criteria/requirements-compliance.md` — same
+- `comprehensive-review/SKILL.md` — update Step 3 (simple self-review), Step 4 (merge/prioritize), and downstream steps (5-7) to reflect new priority flow
+- `comprehensive-review/post-comments.md` — no structural changes needed (receives findings with priorities from root agent)
 
-- **Trivial** (typo, config tweak, single obvious change): implement directly, no plan needed.
-- **Small** (a few files, clear what to do): write 2–3 sentences in `plan.md` describing what and why, then implement. No substeps.
-- **Medium** (multiple components, design decisions, edge cases): write a plan in `plan.md` with requirements, affected files, key decisions, verification. Break into 3–5 steps.
-- **Large** (new feature, cross-cutting, unclear scope): gather requirements and write a technical spec first (`requirements.md`, `spec.md` in `{@artifacts_path}/`). Then write `plan.md` with concrete steps referencing the spec.
-
-**Skip planning and implement directly when** the task is trivial, or the user explicitly asks to "just do it" / gives a clear direct instruction.
-
-To reflect the actual purpose of the first step, you can rename it to something more relevant (e.g., Planning, Investigation). Do NOT remove meta information like comments for any step.
-
-Rule of thumb for step size: each step = a coherent unit of work (component, endpoint, test suite). Not too granular (single function), not too broad (entire feature). Unit tests are part of each step, not separate.
-
-Update `{@artifacts_path}/plan.md`.
+**Key decisions**:
+- Subagents report findings as a flat numbered list — no priority or severity labels at all
+- Subagent checklists renamed from "Critical Issues (P0-P1)" to "What to look for — critical issues" etc. for analysis guidance only
+- Root agent's Step 4 restructured into substeps: (4a) deduplicate, (4b) filter false-positives, (4c) assign P0-P3 priorities using cross-criteria context, (4d) format output

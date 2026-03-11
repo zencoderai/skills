@@ -27,16 +27,9 @@ Read the diff from the file path provided in the input.
 
 Review against two tiers using the checklist below.
 
-#### Priority Levels
+**Note:** Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.). Report findings as a flat list. The root agent will filter false positives and assign final priorities after reviewing all findings across all criteria.
 
-| Level | Meaning | Action |
-|-------|---------|--------|
-| P0 | Critical — crashes, data corruption, incorrect behavior in common paths | Must fix |
-| P1 | Major — significant bug, broken feature, incorrect output | Must fix |
-| P2 | Minor — edge case handling, defensive improvements | Nice to fix |
-| P3 | Suggestion — robustness enhancement | Optional |
-
-#### Critical Issues (P0–P1)
+#### What to look for — critical issues
 
 **Logic Errors:**
 - Incorrect conditional logic (wrong operators, inverted conditions)
@@ -84,7 +77,7 @@ Review against two tiers using the checklist below.
 - Atomicity violations
 - Order-of-operations bugs in async code
 
-#### Robustness (P2–P3)
+#### What to look for — robustness
 
 **Defensive Coding:**
 - Assertions missing for preconditions
@@ -130,15 +123,14 @@ Output this format:
 
 ### Findings
 
-| Priority | Bug | Type | Location |
-|----------|-----|------|----------|
-| P0 | Description | Logic Error | link to specific line in file |
-| P1 | Description | Edge Case | link to specific line in file |
-| P2 | Description | State Issue | link to specific line in file |
+| # | Bug | Type | Location |
+|---|-----|------|----------|
+| 1 | Description | Logic Error | link to specific line in file |
+| 2 | Description | Edge Case | link to specific line in file |
 
 ### Details
 
-#### [P0/P1] Issue title
+#### 1. Issue title
 **File:** link to specific line in file
 **Type:** [Logic Error | Edge Case | State Management | Data Handling | API Contract | Concurrency]
 
@@ -171,7 +163,7 @@ fixed code that handles the case correctly
 test that would catch this bug
 \```
 
-(Repeat for each P0/P1 finding. P2/P3 items only need the table entry unless reproduction steps or test cases add value.)
+(Repeat for each finding that warrants detail.)
 
 ### Edge Cases to Consider
 [List of edge cases that should be verified — either tested or manually confirmed]
@@ -181,10 +173,11 @@ test that would catch this bug
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no P0 or P1 findings.
-- Use `REQUEST CHANGES` when P0 or P1 findings exist.
+- Use `APPROVE` only when there are no significant findings.
+- Use `REQUEST CHANGES` when significant findings exist.
 - Use `NEEDS DISCUSSION` when behavior is ambiguous and could be intentional.
 - Include reproduction scenarios for bugs to help verify fixes.
 - Suggest test cases that would prevent regressions.
-- Include corrected code for every P0 and P1 finding.
+- Include corrected code for significant findings.
 - Focus on bugs and logic errors, not code style, performance, or requirements compliance (unless they directly cause bugs).
+- Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
