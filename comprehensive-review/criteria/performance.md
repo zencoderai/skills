@@ -119,10 +119,6 @@ Output this format:
 ```
 ## Performance Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Impact Level**: [CRITICAL | HIGH | MEDIUM | LOW]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: performance impact of this change and overall assessment]
 
@@ -172,11 +168,9 @@ improved code with better performance characteristics
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no significant findings.
-- Use `REQUEST CHANGES` when significant findings exist.
-- Use `NEEDS DISCUSSION` when performance trade-offs need benchmarking or team consensus.
 - Include complexity analysis (Big-O) when relevant.
 - Quantify expected impact when possible.
 - Provide optimized code for significant findings.
 - Consider the full request lifecycle, not just the changed code in isolation.
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.

@@ -119,10 +119,6 @@ Output this format:
 ```
 ## Security Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Risk Level**: [CRITICAL | HIGH | MEDIUM | LOW]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: security impact of this change and overall assessment]
 
@@ -168,11 +164,9 @@ corrected code with proper security controls
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no significant findings.
-- Use `REQUEST CHANGES` when significant findings exist.
-- Use `NEEDS DISCUSSION` when security trade-offs need team/security-team consensus.
 - Include CWE references for all findings when applicable.
 - Provide concrete exploit scenarios to justify significance.
 - Include secure code fixes for significant findings.
 - Consider both immediate exploitability and chained attack potential.
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.

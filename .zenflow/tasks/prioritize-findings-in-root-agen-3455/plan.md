@@ -37,3 +37,4 @@ Do not make assumptions on important decisions — get clarification first.
 - Subagents report findings as a flat numbered list — no priority or severity labels at all
 - Subagent checklists renamed from "Critical Issues (P0-P1)" to "What to look for — critical issues" etc. for analysis guidance only
 - Root agent's Step 4 restructured into substeps: (4a) deduplicate, (4b) filter false-positives, (4c) assign P0-P3 priorities using cross-criteria context, (4d) format output
+- Removed verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) from all subagent output formats — subagents only report findings, no approval decisions

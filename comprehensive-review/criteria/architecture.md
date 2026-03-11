@@ -106,9 +106,6 @@ Output this format:
 ```
 ## Architecture Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: what architectural impact this change has and overall assessment]
 
@@ -146,9 +143,7 @@ code or structural suggestion
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no significant findings.
-- Use `REQUEST CHANGES` when significant findings exist.
-- Use `NEEDS DISCUSSION` when architectural trade-offs need team consensus.
 - Include detailed write-ups with suggested redesigns for significant findings.
 - Focus on systemic impact, not cosmetic issues.
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.

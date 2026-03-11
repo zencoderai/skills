@@ -114,10 +114,6 @@ Output this format:
 ```
 ## Bug Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Bug Risk**: [NONE | LOW | MEDIUM | HIGH | CRITICAL]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: assessment of bug risk in this change]
 
@@ -173,11 +169,9 @@ test that would catch this bug
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no significant findings.
-- Use `REQUEST CHANGES` when significant findings exist.
-- Use `NEEDS DISCUSSION` when behavior is ambiguous and could be intentional.
 - Include reproduction scenarios for bugs to help verify fixes.
 - Suggest test cases that would prevent regressions.
 - Include corrected code for significant findings.
 - Focus on bugs and logic errors, not code style, performance, or requirements compliance (unless they directly cause bugs).
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.

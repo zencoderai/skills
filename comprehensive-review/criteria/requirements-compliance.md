@@ -95,10 +95,6 @@ Output this format:
 ```
 ## Requirements Compliance Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Compliance Level**: [FULLY COMPLIANT | MOSTLY COMPLIANT | PARTIALLY COMPLIANT | NON-COMPLIANT]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: does this implementation meet the requirements]
 
@@ -152,11 +148,9 @@ code that would satisfy the requirement
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no significant findings.
-- Use `REQUEST CHANGES` when significant findings exist.
-- Use `NEEDS DISCUSSION` when requirements are ambiguous and need clarification.
 - Always include the requirements compliance matrix.
 - Reference specific requirements or acceptance criteria in findings.
 - Suggest implementation code for significant findings.
 - Focus on requirements compliance, not code style, performance, or bugs (unless they cause requirement violations).
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.

@@ -118,10 +118,6 @@ Output this format:
 ```
 ## Code Quality Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Quality Level**: [HIGH | ACCEPTABLE | NEEDS WORK | POOR]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: quality assessment of this change and overall impression]
 
@@ -163,10 +159,8 @@ cleaner, more readable code
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no significant findings.
-- Use `REQUEST CHANGES` when significant findings exist.
-- Use `NEEDS DISCUSSION` when quality trade-offs need team consensus.
 - Include improved code examples for significant findings.
 - Acknowledge positive aspects to provide balanced feedback.
 - Focus on maintainability impact, not personal style preferences.
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
