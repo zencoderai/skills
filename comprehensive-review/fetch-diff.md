@@ -89,16 +89,17 @@ Evaluate the PR complexity based on the diff and metadata gathered above. **Only
 - **medium**: Moderate change. Typically 100–500 lines of implementation code changed or 4–10 non-test/non-doc files, may touch multiple modules but follows a clear pattern (e.g., adding a new endpoint, refactoring a module, implementing a straightforward feature).
 - **hard**: Large or complex change. Typically > 500 lines of implementation code changed or > 10 non-test/non-doc files, or involves architectural changes, cross-cutting concerns, new subsystems, complex business logic, security-sensitive code, or significant API surface changes. Any change that is hard to reason about or has high blast radius.
 
-Use the PR metadata (additions, deletions, changedFiles) combined with qualitative assessment of the diff content, but filter out test and documentation files from the quantitative metrics. The qualitative assessment matters more than raw numbers — a 200-line architectural change can be "hard" while a 600-line generated migration can be "simple".
+Use the PR metadata (additions, deletions, changedFiles, files list) for quantitative assessment — filter out test and documentation files from the counts using the file paths in the metadata. Do NOT read the full diff file to assess complexity; the file list and line counts from metadata are sufficient for this step. The qualitative assessment should be based on the nature of the changed files (their paths and roles in the system), not on reading the diff content. The qualitative assessment matters more than raw numbers — a 200-line architectural change can be "hard" while a 600-line generated migration can be "simple".
 
 ## Required Output
 
 Return the following structured information:
 
 1. **Diff file path**: The absolute path to the saved diff file (e.g., `/tmp/review-diff-<branch-name>.patch`). MUST be an absolute path starting with `/`.
-2. **Title**: The PR title (PR mode) or a summary derived from commit messages (local mode)
-3. **Description**: A comprehensive task description derived only from the PR description, PR comments, commit messages, and committed `.md` files. Never infer or supplement the description from the code diff. This should be thorough enough for reviewers to understand the full intent of the change.
-4. **Complexity**: One of `simple`, `medium`, or `hard`
+2. **Diff line count**: The total number of lines in the diff file. After saving the diff, run `wc -l < <diff-file-path>` to get this count.
+3. **Title**: The PR title (PR mode) or a summary derived from commit messages (local mode)
+4. **Description**: A comprehensive task description derived only from the PR description, PR comments, commit messages, and committed `.md` files. Never infer or supplement the description from the code diff. This should be thorough enough for reviewers to understand the full intent of the change.
+5. **Complexity**: One of `simple`, `medium`, or `hard`
 
 Format your response exactly as:
 
@@ -113,4 +114,7 @@ Format your response exactly as:
 
 ### Diff
 <absolute path to the diff file, e.g. /tmp/review-diff-feature.patch>
+
+### Diff Line Count
+<total number of lines in the diff file>
 ```
