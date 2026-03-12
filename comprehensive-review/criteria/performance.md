@@ -46,6 +46,7 @@ Review against two tiers using the checklist below.
 - Missing connection pooling
 - Synchronous I/O blocking async contexts
 - Sequential I/O that could be parallelized
+- Re-fetching data from external source when already available in local variables or function parameters
 
 **Memory Management:**
 - Memory leaks (unreleased resources, growing caches)

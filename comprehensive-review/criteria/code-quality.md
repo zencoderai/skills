@@ -104,6 +104,11 @@ Review against two tiers using the checklist below.
 - Reimplementing standard library functions
 - Over-engineering simple problems
 
+**Test Quality:**
+- Tests catching overly broad exception types instead of the specific expected exception
+- Test names that do not accurately describe the scenario being tested
+- Assertions too loose to validate the intended behavior
+
 **Principles:**
 - Only flag issues **introduced by the change**, not pre-existing problems.
 - Prefer explicit, readable code over clever one-liners.

@@ -1,5 +1,5 @@
 ---
-name: comprehensive-review
+name: comprehensive-review-v3
 description: "Comprehensive code review using parallel specialized subagents. Use when you want a thorough code review covering architecture, security, performance, code quality, requirements compliance, and bugs. Works with GitHub PR links OR local branch changes. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes. IMPORTANT: this skill is costly, don't use it unless user explicitly requested to use this skill."
 disable-model-invocation: true
 metadata:

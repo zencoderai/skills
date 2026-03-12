@@ -38,6 +38,7 @@ Review against two tiers using the checklist below.
 - Incorrect operator precedence
 - Broken control flow (missing breaks, wrong returns)
 - Incorrect algorithm implementation
+- Language/runtime semantic traps (truthiness of valid zero/empty values, non-deterministic builtins, implicit type coercion)
 
 **Edge Cases:**
 - Null/undefined not handled where possible
@@ -46,6 +47,8 @@ Review against two tiers using the checklist below.
 - Missing error handling for expected failures
 - Division by zero possibilities
 - Integer overflow/underflow risks
+- Paired/matched iteration where one collection may be exhausted before the other
+- Platform-specific behavior (OS-dependent commands, path formats, line endings)
 
 **State Management:**
 - Incorrect state transitions
@@ -62,6 +65,7 @@ Review against two tiers using the checklist below.
 - Incorrect encoding/decoding
 - Missing data validation
 - Truncation of important data
+- Values valid in one code path but invalid in alternative dispatch branches
 
 **API Contract:**
 - Return values don't match declared types
@@ -69,6 +73,8 @@ Review against two tiers using the checklist below.
 - Callbacks called incorrectly (wrong args, multiple calls)
 - Exceptions thrown where not declared
 - Side effects not matching documentation
+- Breaking changes to existing response formats, error shapes, or status codes
+- Call sites not satisfying new/modified method preconditions or signatures
 
 **Concurrency:**
 - Race conditions between threads/processes
@@ -76,6 +82,12 @@ Review against two tiers using the checklist below.
 - Missing synchronization on shared state
 - Atomicity violations
 - Order-of-operations bugs in async code
+
+**Cross-Reference Consistency:**
+- When code is removed or replaced, verify all consumption sites (callers, templates, other rendering paths) still work correctly
+- For paired operations (create↔lookup, enable↔cleanup, write↔read), verify both sides use matching identifiers and parameters
+- When code is refactored, split, or moved, verify that behavior is preserved in every new code path, unless the change in behavior was intended
+- Trace realistic user scenarios through chains of related functions to verify they compose correctly at boundaries
 
 #### What to look for — robustness
 
@@ -98,6 +110,18 @@ Review against two tiers using the checklist below.
 - Code paths that can't be tested
 - Behavior changes that need test updates
 - Edge cases without test coverage
+
+#### Systematic Error-Path Analysis
+
+For every new or modified operation that can fail (I/O, network, parsing, type assertions, dynamic imports, external calls):
+
+1. **Identify the failure point** — what can go wrong and what value/exception is produced on failure.
+2. **Trace the failure path forward** — follow the error through the code and check:
+   - Is the error propagated to callers, or silently swallowed/ignored?
+   - Are local variables, shared state, or caches left in a consistent state? (Valid data must not be overwritten with nil/null/zero on error.)
+   - Are acquired resources (locks, file handles, connections) released on failure?
+   - If the operation partially mutated state before failing, is the mutation rolled back or otherwise left safe?
+3. **Report any path** where failure leads to state corruption, data loss, or silent misbehavior.
 
 **Principles:**
 - Only flag issues **introduced by the change**, not pre-existing problems.

@@ -61,6 +61,10 @@ Review against two tiers using the checklist below.
 - Hidden dependencies or implicit contracts
 - Dependency cycles between packages/modules
 
+**Concurrency Design:**
+- Read-modify-write patterns on shared state without atomicity guarantees
+- Changes to synchronization scope (lock/unlock boundaries) that may introduce races
+
 #### What to look for — other concerns
 
 **Scalability:**

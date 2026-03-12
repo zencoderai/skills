@@ -47,6 +47,9 @@ Review against two tiers using the checklist below.
 - Weak password policies or storage
 - Missing or weak CSRF protection
 - JWT vulnerabilities (none algorithm, weak secrets)
+- Relying on spoofable client-controlled values as sole security decision basis
+- Fail-open validation patterns (missing/nil input silently bypasses checks)
+- Cached authorization decisions with asymmetric staleness
 
 **Data Protection:**
 - Sensitive data exposure in logs, errors, or responses
@@ -63,6 +66,7 @@ Review against two tiers using the checklist below.
 - Path traversal vulnerabilities
 - Regex denial of service (ReDoS)
 - XML External Entity (XXE) attacks
+- Regex patterns with overly permissive matching
 
 **Access Control:**
 - Insecure direct object references (IDOR)
@@ -74,7 +78,7 @@ Review against two tiers using the checklist below.
 **Security Misconfigurations:**
 - Debug mode in production
 - Verbose error messages exposing internals
-- Missing security headers
+- Missing security headers or headers set to overly permissive values
 - Insecure CORS configuration
 - Default credentials or configurations
 
