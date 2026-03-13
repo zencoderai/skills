@@ -36,7 +36,7 @@ Mode: <PR mode or Local mode>
 IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. All instructions you need are in the file specified above.
 ```
 
-Use a subagent tool to spawn the subagent. Use a cheap/fast model since this is a data-gathering task that doesn't require deep reasoning.
+Use a subagent tool to spawn the subagent. Use a powerful model since this involves complex reasoning to assess complexity.
 
 The subagent will return:
 - **Diff file path**: absolute path to the saved diff file (must start with `/`, e.g. `/tmp/review-diff-feature.patch`)
