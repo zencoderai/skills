@@ -44,6 +44,7 @@ Review against two tiers using the checklist below.
 - Domain constraints not enforced
 - Workflow steps missing or out of order
 - Validation rules don't match specification
+- For refactored authorization, filtering, or query-building logic: build a scenario matrix covering each mode/dispatch path and boundary cases like "parent exists but children set is empty," then compare old vs new behavior
 
 **Output/Interface Compliance:**
 - Output format/structure doesn't match specification
@@ -154,3 +155,4 @@ code that would satisfy the requirement
 - Focus on requirements compliance, not code style, performance, or bugs (unless they cause requirement violations).
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
 - Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
+- Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding.

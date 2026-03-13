@@ -38,7 +38,8 @@ Review against two tiers using the checklist below.
 - Incorrect operator precedence
 - Broken control flow (missing breaks, wrong returns)
 - Incorrect algorithm implementation
-- Language/runtime semantic traps (truthiness of valid zero/empty values, non-deterministic builtins, implicit type coercion)
+- Language/runtime semantic traps (truthiness of valid zero/empty values like `0`, `0.0`, `""`, `[]`; non-deterministic builtins like `hash()` used for cross-process/persistent keys; implicit type coercion)
+- New library/framework calls in control-flow-sensitive code (CLI handlers, middleware, lifecycle hooks) that may have non-obvious side effects (e.g., process termination, swallowed errors) or may not exist in the project's supported runtime versions
 
 **Edge Cases:**
 - Null/undefined not handled where possible
@@ -48,7 +49,8 @@ Review against two tiers using the checklist below.
 - Division by zero possibilities
 - Integer overflow/underflow risks
 - Paired/matched iteration where one collection may be exhausted before the other
-- Platform-specific behavior (OS-dependent commands, path formats, line endings)
+- Platform-specific behavior (OS-dependent commands, path formats, line endings). For shell scripts, Dockerfiles, and CI helpers, check for OS-specific assumptions (BSD vs GNU `sed`, bashisms, path handling)
+- Boundary-driven interaction bugs in stateful flows (pagination, cursors, offsets, navigation): simulate boundary values (0, < limit, == limit)
 
 **State Management:**
 - Incorrect state transitions
@@ -57,6 +59,8 @@ Review against two tiers using the checklist below.
 - Stale state causing wrong behavior
 - Missing state initialization
 - State not cleaned up properly
+- Shared state (caches, globals) overwritten with invalid values on failure paths, erasing previously valid data
+- Lifecycle/shutdown/cleanup paths: verify that `break`/`return` in timeout/deadline-driven loops does not skip cleanup of remaining resources
 
 **Data Handling:**
 - Incorrect data transformations
@@ -66,6 +70,8 @@ Review against two tiers using the checklist below.
 - Missing data validation
 - Truncation of important data
 - Values valid in one code path but invalid in alternative dispatch branches
+- Data migration/canonicalization mismatches: when storage or lookup behavior changes with a migration/backfill, verify that legacy values survive through old format → migration → new write normalization → new lookup path
+- Identifier canonicalization mismatches: when membership tests, caches, or paired load/lookup logic use identifiers, verify that logically identical inputs are normalized to a single canonical form (e.g., `String` vs `Symbol`, case variants, normalized paths)
 
 **API Contract:**
 - Return values don't match declared types
@@ -73,21 +79,24 @@ Review against two tiers using the checklist below.
 - Callbacks called incorrectly (wrong args, multiple calls)
 - Exceptions thrown where not declared
 - Side effects not matching documentation
-- Breaking changes to existing response formats, error shapes, or status codes
+- Breaking changes to existing response formats, error shapes, or status codes (compare pre/post success and error status codes plus response body shapes for every changed endpoint)
 - Call sites not satisfying new/modified method preconditions or signatures
+- When arguments's format/domain is broadened or changed, verify the new value is valid in every conditional backend/implementation that consumes it (feature-flagged paths, external tool adapters, alternative dispatch branches)
 
 **Concurrency:**
 - Race conditions between threads/processes
 - Deadlock possibilities
 - Missing synchronization on shared state
-- Atomicity violations
+- Atomicity violations (for every new database/state write, identify whether it is a read-modify-write on shared state and verify it uses an atomic primitive, transaction, or lock)
 - Order-of-operations bugs in async code
 
 **Cross-Reference Consistency:**
 - When code is removed or replaced, verify all consumption sites (callers, templates, other rendering paths) still work correctly
-- For paired operations (create↔lookup, enable↔cleanup, write↔read), verify both sides use matching identifiers and parameters
-- When code is refactored, split, or moved, verify that behavior is preserved in every new code path, unless the change in behavior was intended
+- For paired operations (create↔lookup, enable↔cleanup, write↔read, cache-write↔cache-invalidate, bind-state↔fetch-state), verify both sides use matching identifiers, parameters, and canonical forms. When models are reconstructed or translated, verify stable fields like `id`, `type`, timestamps are preserved
+- When code is refactored, split, or moved, verify that behavior is preserved in every new code path, unless the change in behavior was intended. Still do one focused pass over touched code for concrete defects that remain present in changed lines (wrong return values, stale data, redundant re-queries)
 - Trace realistic user scenarios through chains of related functions to verify they compose correctly at boundaries
+- For newly introduced or modified guards/predicates/helpers shared across paths, build a state matrix of key input variants (e.g., `null` vs present, initial vs re-entry, empty collection) and compare before-vs-after behavior
+- For new state/session/pipeline fields: trace all writes and reads across redirects, retries, and alternate entry paths; verify every read is either guaranteed initialized or safely guarded when absent
 
 #### What to look for — robustness
 
@@ -104,11 +113,14 @@ Review against two tiers using the checklist below.
 - Error messages not helpful for debugging
 - Missing error recovery
 - Errors not propagated correctly
+- Unhandled rejections at newly introduced `await`/dynamic import/async boundaries
 
 **Testing Gaps:**
 - Obvious test cases missing
 - Code paths that can't be tested
 - Behavior changes that need test updates
+- When production code changes parameters, return types, or contracts, verify modified tests/mocks actually represent the new inputs and side effects
+- Test names/docstrings that do not match the test body (e.g., `test_empty_array` that actually tests an empty dict)
 - Edge cases without test coverage
 
 #### Systematic Error-Path Analysis
@@ -118,10 +130,13 @@ For every new or modified operation that can fail (I/O, network, parsing, type a
 1. **Identify the failure point** — what can go wrong and what value/exception is produced on failure.
 2. **Trace the failure path forward** — follow the error through the code and check:
    - Is the error propagated to callers, or silently swallowed/ignored?
-   - Are local variables, shared state, or caches left in a consistent state? (Valid data must not be overwritten with nil/null/zero on error.)
+   - Are local variables, shared state, or caches left in a consistent state? (Valid data must not be overwritten with nil/null/zero on error. Verify that failure does not erase previously valid cached values.)
    - Are acquired resources (locks, file handles, connections) released on failure?
    - If the operation partially mutated state before failing, is the mutation rolled back or otherwise left safe?
 3. **Report any path** where failure leads to state corruption, data loss, or silent misbehavior.
+
+**Stub/Placeholder Completeness:**
+- For newly added files/functions, check for stub patterns like `"not implemented"`, `panic("TODO")`, empty bodies, or unconditional guard logic that makes the feature incomplete end-to-end.
 
 **Principles:**
 - Only flag issues **introduced by the change**, not pre-existing problems.
@@ -199,3 +214,4 @@ test that would catch this bug
 - Focus on bugs and logic errors, not code style, performance, or requirements compliance (unless they directly cause bugs).
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
 - Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
+- Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding even if they are related.

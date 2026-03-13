@@ -86,6 +86,7 @@ Review against two tiers using the checklist below.
 **Documentation:**
 - Missing function/method documentation
 - Outdated comments that don't match code
+- Error messages, logs, labels, and copied strings that do not accurately describe the current endpoint/flow/action, especially when similar logic is duplicated between related paths
 - Comments that explain "what" instead of "why"
 - Missing examples for complex APIs
 - Undocumented assumptions or preconditions
@@ -108,6 +109,8 @@ Review against two tiers using the checklist below.
 - Tests catching overly broad exception types instead of the specific expected exception
 - Test names that do not accurately describe the scenario being tested
 - Assertions too loose to validate the intended behavior
+- Modified tests/mocks that do not reflect changed production contracts (new parameters, return types, side effects)
+- Fixed `sleep()` calls used to wait for async/background work
 
 **Principles:**
 - Only flag issues **introduced by the change**, not pre-existing problems.
@@ -169,3 +172,4 @@ cleaner, more readable code
 - Focus on maintainability impact, not personal style preferences.
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
 - Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
+- Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding.

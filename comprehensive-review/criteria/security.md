@@ -66,7 +66,7 @@ Review against two tiers using the checklist below.
 - Path traversal vulnerabilities
 - Regex denial of service (ReDoS)
 - XML External Entity (XXE) attacks
-- Regex patterns with overly permissive matching
+- Regex patterns with overly permissive matching (for regexes, allowlists, or blocklists used for security/business-rule decisions, mentally test boundary/adversarial examples: exact match, subdomain prefix, case variants, separator differences, and verify proper anchoring)
 
 **Access Control:**
 - Insecure direct object references (IDOR)
@@ -81,6 +81,11 @@ Review against two tiers using the checklist below.
 - Missing security headers or headers set to overly permissive values
 - Insecure CORS configuration
 - Default credentials or configurations
+
+**Embed/iframe/Cross-Origin Integrations:**
+- Framing policy headers (`X-Frame-Options`, `frame-ancestors` CSP) set to overly permissive values
+- Origin/referer validation relying on spoofable client-controlled headers as sole trust basis
+- Nil/default fallback in embed authorization that silently bypasses checks (fail-open)
 
 #### What to look for — security hardening
 
@@ -174,3 +179,4 @@ corrected code with proper security controls
 - Consider both immediate exploitability and chained attack potential.
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
 - Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
+- Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding.

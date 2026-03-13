@@ -64,6 +64,7 @@ Review against two tiers using the checklist below.
 **Concurrency Design:**
 - Read-modify-write patterns on shared state without atomicity guarantees
 - Changes to synchronization scope (lock/unlock boundaries) that may introduce races
+- Shared state writes after lock scope changes: verify all reads/writes of affected state and enumerate concrete concurrent interleavings
 
 #### What to look for — other concerns
 
@@ -151,3 +152,4 @@ code or structural suggestion
 - Focus on systemic impact, not cosmetic issues.
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
 - Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
+- Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding.
