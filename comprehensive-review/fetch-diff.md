@@ -83,7 +83,13 @@ Look at the list of changed files. If any `.md` files are present in the diff, r
 
 ### Step 3: Assess complexity
 
-Default to **simple**. Increase to **medium** if any of the following apply, or to **hard** if multiple apply or any are especially pronounced:
+Evaluate the PR complexity based on the diff and metadata gathered above. **Only consider changes to production/implementation code** — documentation files (e.g., `*.md`) when counting lines changed and files changed. Classify as one of:
+
+- **simple**: Small, focused change. Typically ≤ 100 lines of implementation code changed across ≤ 3 non-doc files, single concern (e.g., bug fix, config tweak, copy change, dependency bump, simple refactor).
+- **medium**: Moderate change. Typically 100–500 lines of implementation code changed or 4–10 non-doc files, may touch multiple modules but follows a clear pattern (e.g., adding a new endpoint, refactoring a module, implementing a straightforward feature).
+- **hard**: Large or complex change. Typically > 500 lines of implementation code changed or > 10 non-doc files, or involves architectural changes, cross-cutting concerns, new subsystems, complex business logic, security-sensitive code, or significant API surface changes. Any change that is hard to reason about or has high blast radius.
+
+Increase complexity one level if any of the following apply, or two levels if multiple apply:
 
 - **New subsystem or framework**: Adds a coherent new module spanning multiple architectural layers (not just modifying existing files)
 - **Security-critical paths**: Touches authentication, authorization, token management, OAuth/OIDC, cryptography, or access control
