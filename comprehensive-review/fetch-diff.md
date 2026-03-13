@@ -83,40 +83,17 @@ Look at the list of changed files. If any `.md` files are present in the diff, r
 
 ### Step 3: Assess complexity
 
-Evaluate the PR complexity based on the diff and metadata gathered above. **Only consider changes to code** — exclude test files (e.g., `*_test.*`, `*.test.*`, `*.spec.*`, `**/test/**`, `**/tests/**`, `**/__tests__/**`) and documentation files (e.g., `*.md`) when counting lines changed and files changed.
+Default to **simple**. Increase to **medium** if any of the following apply, or to **hard** if multiple apply or any are especially pronounced:
 
-Use the PR metadata (additions, deletions, changedFiles, files list) for quantitative assessment — filter out test and documentation files from the counts using the file paths in the metadata. Do NOT read the full diff file to assess complexity; the file list and line counts from metadata are sufficient for this step. The qualitative assessment should be based on the nature of the changed files (their paths and roles in the system), not on reading the diff content.
-
-#### Baseline classification (size-based, secondary criterion)
-
-Use line counts and file counts as a **starting point only**:
-
-- **simple baseline**: ≤ 100 lines of implementation code changed across ≤ 3 non-test/non-doc files, single concern (e.g., bug fix, config tweak, copy change, dependency bump, simple refactor).
-- **medium baseline**: 100–500 lines of implementation code changed or 4–10 non-test/non-doc files, may touch multiple modules but follows a clear pattern (e.g., adding a new endpoint, refactoring a module, implementing a straightforward feature).
-- **hard baseline**: > 500 lines of implementation code changed or > 10 non-test/non-doc files.
-
-#### Qualitative signals (primary criterion — override size-based baseline)
-
-After determining the size-based baseline, apply the following qualitative signals. These signals reflect structural and semantic complexity that is independent of diff size — a 50-line change can be "hard" if it triggers these signals, while a 600-line generated migration can remain "simple" if none apply.
-
-**Signals that set the floor to `hard` regardless of size:**
-
-- **New subsystem or framework introduction**: The PR adds (not just modifies) 3+ new non-test files that form a coherent new module spanning architectural layers (e.g., interface + factory + implementation, or SPI + provider + default impl). PR title keywords like "implement", "introduce", "new framework/subsystem" reinforce this signal.
-- **Security-critical domain paths**: Changed file paths are in authentication, authorization, token management, OAuth/OIDC, cryptography, permissions, or access control domains. Even a few-line change in these areas can cause privilege escalation or authentication bypasses.
-- **Shared infrastructure modification alongside new dependent code**: The PR simultaneously modifies existing shared code (base classes, widely-used utilities, middleware, common managers) AND adds new code that depends on those modifications. The blast radius is compounded — shared modification may regress existing callers while new code introduces its own bugs.
-
-**Signals that bump complexity up by one tier** (simple→medium, medium→hard):
-
-- **Concurrency and threading primitives**: The PR introduces or modifies code involving threads, locks, queues, atomic operations, `synchronized`, `ExecutorService`, `Future`, `asyncio` concurrency primitives, or the PR title/description mentions race conditions, thread safety, or concurrent access. Concurrency bugs require reasoning about interleaved execution, not just static structure.
-- **Cross-file API contract dependencies**: New code calls store/repository/registry lookup APIs where correctness depends on understanding how data was written in non-diff code, or uses field/key lookups (e.g., `validated_data.get("field_name")`) where the key must match a framework's internal mapping conventions. Silent lookup failures from wrong parameters are invisible at the call site.
-- **Feature flag / version guard consistency**: The PR wraps existing logic in a new conditional guard (feature flag, profile check, version check, environment variable) where the guard must be consistent with the rest of the class or subsystem — especially when the codebase has multiple versions of the same flag (e.g., `FEATURE_V1` / `FEATURE_V2`).
-- **Multi-domain / cross-cutting changes**: Changed implementation files span ≥ 4 distinct product domains or subsystem directories. A mismatch between the PR title's stated scope and the actual breadth of changed files is a strong reinforcing signal — it indicates bundled independent concerns that each need full review attention.
-- **Interface or abstract contract changes with scattered implementations**: The PR modifies a shared interface, abstract class, type declaration, or base class method that has multiple concrete implementations — especially when not all implementations are updated in the same PR. Also applies to `@Override` methods with changed return semantics (e.g., introducing `null` where non-null was previously guaranteed).
-- **API response or error contract mutations**: Changed files include endpoint handlers or serializer classes where existing response structures are modified or removed — changed field names, added/removed response body on previously-empty responses, changed status codes or content types. These are breaking changes whose impact is invisible within the diff.
-
-#### Final classification
-
-Combine the size-based baseline with qualitative signals to produce the final classification. Qualitative signals always take precedence — if any "floor to hard" signal is present, classify as **hard**. If any "bump one tier" signal is present, increase the baseline by one level. Multiple bump signals do not stack beyond **hard**.
+- **New subsystem or framework**: Adds a coherent new module spanning multiple architectural layers (not just modifying existing files)
+- **Security-critical paths**: Touches authentication, authorization, token management, OAuth/OIDC, cryptography, or access control
+- **Shared infrastructure + new dependents**: Modifies shared code (base classes, utilities, middleware) AND adds new code depending on those modifications
+- **Concurrency primitives**: Introduces or modifies threads, locks, queues, atomic operations, or async concurrency patterns
+- **Cross-file API contract dependencies**: Correctness depends on implicit contracts with non-diff code (e.g., key lookups, registry patterns, framework conventions)
+- **Feature flag / version guard consistency**: Adds conditional guards that must stay consistent with existing guards elsewhere in the codebase
+- **Multi-domain / cross-cutting scope**: Changes span many distinct product domains or subsystem directories, especially if broader than the PR title suggests
+- **Interface or abstract contract changes**: Modifies shared interfaces, abstract classes, or base methods with multiple implementations — especially when not all implementations are updated
+- **API response or error contract mutations**: Modifies existing response structures, status codes, or content types in endpoint handlers or serializers
 
 ## Required Output
 
