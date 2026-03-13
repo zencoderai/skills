@@ -26,16 +26,9 @@ Read the diff from the file path provided in the input.
 
 Review against two tiers using the checklist below.
 
-#### Priority Levels
+**Note:** Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.). Report findings as a flat list. The root agent will filter false positives and assign final priorities after reviewing all findings across all criteria.
 
-| Level | Meaning | Action |
-|-------|---------|--------|
-| P0 | Critical — fundamental architectural violation, systemic risk | Must fix |
-| P1 | Major — significant design issue, maintainability threat | Must fix |
-| P2 | Minor — suboptimal design choice, could be improved | Nice to fix |
-| P3 | Suggestion — architectural enhancement idea | Optional |
-
-#### Critical Issues (P0–P1)
+#### What to look for — critical issues
 
 **Design Patterns:**
 - Anti-patterns (God classes, circular dependencies, service locator abuse)
@@ -68,7 +61,12 @@ Review against two tiers using the checklist below.
 - Hidden dependencies or implicit contracts
 - Dependency cycles between packages/modules
 
-#### Architectural Concerns (P2–P3)
+**Concurrency Design:**
+- Read-modify-write patterns on shared state without atomicity guarantees
+- Changes to synchronization scope (lock/unlock boundaries) that may introduce races
+- Shared state writes after lock scope changes: verify all reads/writes of affected state and enumerate concrete concurrent interleavings
+
+#### What to look for — other concerns
 
 **Scalability:**
 - Designs that won't scale with load
@@ -113,23 +111,19 @@ Output this format:
 ```
 ## Architecture Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: what architectural impact this change has and overall assessment]
 
 ### Findings
 
-| Priority | Issue | Location |
-|----------|-------|----------|
-| P0 | Description | link to specific line in file |
-| P1 | Description | link to specific line in file |
-| P2 | Description | link to specific line in file |
+| # | Issue | Location |
+|---|-------|----------|
+| 1 | Description | link to specific line in file |
+| 2 | Description | link to specific line in file |
 
 ### Details
 
-#### [P0/P1] Issue title
+#### 1. Issue title
 **Location:** link to specific line in file
 
 Description of the architectural issue and its systemic impact.
@@ -144,7 +138,7 @@ code or structural suggestion
 
 **Rationale:** Why this design is preferable.
 
-(Repeat for each P0/P1 finding. P2/P3 items only need the table entry unless a diagram or code suggestion adds clarity.)
+(Repeat for each finding that warrants detail.)
 
 ### Architectural Impact
 [Brief assessment of how this change affects overall system architecture — positive or negative]
@@ -154,9 +148,8 @@ code or structural suggestion
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no P0 or P1 findings.
-- Use `REQUEST CHANGES` when P0 or P1 findings exist.
-- Use `NEEDS DISCUSSION` when architectural trade-offs need team consensus.
-- Include detailed write-ups with suggested redesigns for every P0 and P1 finding.
-- P2/P3 findings go in the table; add detail sections only when diagrams or code help.
+- Include detailed write-ups with suggested redesigns for significant findings.
 - Focus on systemic impact, not cosmetic issues.
+- Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
+- Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding.
