@@ -1,5 +1,5 @@
 ---
-name: comprehensive-review-v4
+name: comprehensive-review-v5
 description: "Comprehensive code review using parallel specialized subagents. Use when you want a thorough code review covering architecture, security, performance, code quality, requirements compliance, and bugs. Works with GitHub PR links OR local branch changes. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes. IMPORTANT: this skill is costly, don't use it unless user explicitly requested to use this skill."
 disable-model-invocation: true
 metadata:
@@ -146,6 +146,7 @@ Review each finding and discard it if:
 - The subagent itself expressed doubt about whether it's a real issue.
 - You can verify from the code context that the issue does not apply (e.g., the code is already protected by a guard the subagent missed, or the flagged pattern is intentional and correct).
 - The finding is about a pre-existing issue not introduced by the change.
+- The finding is a style/convention suggestion (naming, unused parameters, data structure choice for small collections) that does not affect correctness or observable behavior. Demote these to P3 rather than discarding, but do not let them crowd out substantive findings.
 
 Be conservative — when in doubt, keep the finding.
 
@@ -165,6 +166,7 @@ When assigning priorities, consider:
 - **Blast radius**: Issues affecting hot paths, public APIs, or security boundaries deserve higher priority.
 - **Confidence**: Findings confirmed by multiple models (hard PRs) or backed by concrete evidence deserve higher priority than speculative ones.
 - **Context**: The same issue type may deserve different priorities depending on the codebase and change context.
+- **Compound findings**: After assigning individual priorities, scan for findings in the same code area or feature that interact. If multiple lower-priority findings together create a higher-impact vulnerability or failure mode, create an additional compound finding that describes the combined impact, or escalate the most relevant individual finding.
 
 #### 4d. Format output
 

@@ -87,6 +87,16 @@ Review against two tiers using the checklist below.
 - Origin/referer validation relying on spoofable client-controlled headers as sole trust basis
 - Nil/default fallback in embed authorization that silently bypasses checks (fail-open)
 
+**Authorization Flow Tracing:**
+
+For each authorization or access-control decision found in the diff:
+
+1. **Identify all inputs** to the decision (headers, cookies, URL parameters, config values).
+2. **For each input**: determine if it is client-controlled/spoofable vs. server-verified.
+3. **Trace the nil/empty/missing case**: What happens when the input is absent? Does validation fail-closed (deny) or fail-open (allow/skip)?
+4. **Check for layered defense**: If one control is weak (e.g., referer-based), is there a stronger backup control? If the backup is also weak or missing, the combination is a real vulnerability even if each individual weakness seems minor.
+5. **Assess security IMPACT, not just correctness**: When a security header or mechanism is misconfigured, describe what attack it enables (e.g., "disables clickjacking protection" not "invalid RFC value"). The question is "what can an attacker do?" not "is this technically valid?"
+
 #### What to look for — security hardening
 
 **Defense in Depth:**

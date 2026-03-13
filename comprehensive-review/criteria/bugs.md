@@ -82,6 +82,7 @@ Review against two tiers using the checklist below.
 - Breaking changes to existing response formats, error shapes, or status codes (compare pre/post success and error status codes plus response body shapes for every changed endpoint)
 - Call sites not satisfying new/modified method preconditions or signatures
 - When arguments's format/domain is broadened or changed, verify the new value is valid in every conditional backend/implementation that consumes it (feature-flagged paths, external tool adapters, alternative dispatch branches)
+- Behavioral contract regressions: for every function/method whose implementation changed, compare the pre-change and post-change behavioral contract from the perspective of existing callers — operations that previously always succeeded but can now fail, non-blocking/async operations that became synchronous/blocking, error types now propagated where previously swallowed, response type/format changes. Trace new error propagation paths up to callers; if a new failure can now surface to an end user (auth failure, request rejection, UI error), flag it as a behavioral change
 
 **Concurrency:**
 - Race conditions between threads/processes
@@ -95,7 +96,7 @@ Review against two tiers using the checklist below.
 - For paired operations (create↔lookup, enable↔cleanup, write↔read, cache-write↔cache-invalidate, bind-state↔fetch-state), verify both sides use matching identifiers, parameters, and canonical forms. When models are reconstructed or translated, verify stable fields like `id`, `type`, timestamps are preserved
 - When code is refactored, split, or moved, verify that behavior is preserved in every new code path, unless the change in behavior was intended. Still do one focused pass over touched code for concrete defects that remain present in changed lines (wrong return values, stale data, redundant re-queries)
 - Trace realistic user scenarios through chains of related functions to verify they compose correctly at boundaries
-- For newly introduced or modified guards/predicates/helpers shared across paths, build a state matrix of key input variants (e.g., `null` vs present, initial vs re-entry, empty collection) and compare before-vs-after behavior
+- For newly introduced or modified guards/predicates/helpers shared across paths, build a state matrix by: (1) enumerating all execution contexts/lifecycle stages where the guarded code runs (e.g., initial login vs re-authentication, first request vs retry, create vs update), (2) mapping which key variables (`user`, `session`, `request context`) are populated vs null/absent at each stage, (3) evaluating the guard at every stage — a guard like `if (user != null && hasCredential(user))` may be correct where user is known but silently disables the feature in earlier stages where user hasn't been identified yet, (4) comparing before-vs-after behavior to verify the new guard doesn't regress any stage that worked before
 - For new state/session/pipeline fields: trace all writes and reads across redirects, retries, and alternate entry paths; verify every read is either guaranteed initialized or safely guarded when absent
 
 #### What to look for — robustness
