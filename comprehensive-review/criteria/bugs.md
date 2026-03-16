@@ -49,7 +49,7 @@ Review against two tiers using the checklist below.
 - Division by zero possibilities
 - Integer overflow/underflow risks
 - Paired/matched iteration where one collection may be exhausted before the other
-- Platform-specific behavior (OS-dependent commands, path formats, line endings). For shell scripts, Dockerfiles, and CI helpers, check for OS-specific assumptions (BSD vs GNU `sed`, bashisms, path handling)
+- Platform-specific behavior (OS-dependent commands, path formats, line endings).
 - Boundary-driven interaction bugs in stateful flows (pagination, cursors, offsets, navigation): simulate boundary values (0, < limit, == limit)
 
 **State Management:**

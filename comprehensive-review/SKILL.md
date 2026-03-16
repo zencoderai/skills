@@ -32,7 +32,7 @@ Read the file `<SKILL_DIRECTORY>/fetch-diff.md` for detailed instructions, then 
 Mode: <PR mode or Local mode>
 <If PR mode: Owner: <OWNER>, Repo: <REPO>, PR Number: <PR_NUMBER>>
 
-IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. All instructions you need are in the file specified above.
+IMPORTANT: Do NOT invoke the Skill tool. All instructions you need are in the file specified above.
 ```
 
 Use a subagent tool to spawn the subagent. Use a powerful model since this involves complex reasoning to assess complexity.
@@ -92,7 +92,7 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 ### Diff
 Read the diff from file: <absolute path to diff file> (total lines: <diff line count>)
 
-IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. Do NOT run tests, builds, linters, or type-checks — your review is based on static analysis only. All review instructions are in the file specified above.
+IMPORTANT: Do NOT invoke the Skill tool. Do NOT run tests, builds, linters, or type-checks — your review is based on static analysis only. All review instructions are in the file specified above.
 ```
 
 Where `<INSTRUCTION_FILE>` is the absolute path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
@@ -121,7 +121,7 @@ Read the file `<INSTRUCTION_FILE>` for detailed review instructions, then follow
 ### Diff
 Read the diff from file: <absolute path to diff file> (total lines: <diff line count>)
 
-IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. Do NOT run tests, builds, linters, or type-checks — your review is based on static analysis only. All review instructions are in the file specified above.
+IMPORTANT: Do NOT invoke the Skill tool. Do NOT run tests, builds, linters, or type-checks — your review is based on static analysis only. All review instructions are in the file specified above.
 ```
 
 Where `<INSTRUCTION_FILE>` is the absolute path to the instruction file (e.g. `<SKILL_DIRECTORY>/criteria/architecture.md`).
@@ -239,7 +239,7 @@ Findings to post:
 - **Description**: <description>
 - **Suggested fix**: <suggested fix or "None">
 
-IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. All instructions you need are in the file specified above.
+IMPORTANT: Do NOT invoke the Skill tool. All instructions you need are in the file specified above.
 ```
 
 If user added custom notes to a finding, update description and/or suggested fix according to these notes.
