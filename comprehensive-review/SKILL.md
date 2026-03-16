@@ -1,9 +1,8 @@
 ---
 name: comprehensive-review
 description: "Comprehensive code review using parallel specialized subagents. Use when you want a thorough code review covering architecture, security, performance, code quality, requirements compliance, and bugs. Works with GitHub PR links OR local branch changes. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes. IMPORTANT: this skill is costly, don't use it unless user explicitly requested to use this skill."
-disable-model-invocation: true
 metadata:
-  version: 1.0.0
+  version: 2.0.0
 ---
 
 # Comprehensive Code Review
@@ -36,7 +35,7 @@ Mode: <PR mode or Local mode>
 IMPORTANT: Do NOT invoke the Skill tool. Do NOT use the TodoWrite tool. All instructions you need are in the file specified above.
 ```
 
-Use a subagent tool to spawn the subagent. Use a cheap/fast model since this is a data-gathering task that doesn't require deep reasoning.
+Use a subagent tool to spawn the subagent. Use a powerful model since this involves complex reasoning to assess complexity.
 
 The subagent will return:
 - **Diff file path**: absolute path to the saved diff file (must start with `/`, e.g. `/tmp/review-diff-feature.patch`)
@@ -70,7 +69,7 @@ For **simple** PRs, perform the review yourself (the root agent) without calling
 
 1. Read **all 6** criteria instruction files from `<SKILL_DIRECTORY>/criteria/`.
 2. Read the diff file.
-3. Apply all criteria to review the change yourself, producing findings in the same format as subagents would.
+3. Apply all criteria to review the change yourself, producing findings as a flat list without priorities (same format as subagents would). You will assign priorities in Step 4.
 
 #### Strategy B: Medium complexity
 
@@ -129,16 +128,46 @@ Where `<INSTRUCTION_FILE>` is the absolute path to the instruction file (e.g. `<
 
 All 12 calls should be launched in parallel.
 
-### Step 4: Merge results
+### Step 4: Merge, filter, and prioritize results
 
-Compile all findings into a single deduplicated list. For **simple** PRs, you already have all findings from your self-review. For **medium** and **hard** PRs, collect findings from all subagent responses.
+Subagents return findings as flat lists without priority or severity labels. The root agent is responsible for deduplication, false-positive filtering, and priority assignment.
+
+#### 4a. Collect and deduplicate
 
 1. Collect all findings from each review (self-review or subagent responses).
 2. Group findings by file and line number.
 3. Merge issues that describe the same problem (same file, similar line range, same category). When merging, combine their review types. For **hard** PRs, findings from different models on the same criterion that agree strengthen confidence; findings from only one model should be noted as lower confidence.
 4. Keep the best description and suggested fix from among duplicates.
-5. Sort by priority (P0 first), then by file path.
-6. Filter out any false positives (if a subagent itself said that it's not a real issue or you're 100% sure it's not a real issue).
+
+#### 4b. Filter false positives
+
+Review each finding and discard it if:
+- The subagent itself expressed doubt about whether it's a real issue.
+- You can verify from the code context that the issue does not apply (e.g., the code is already protected by a guard the subagent missed, or the flagged pattern is intentional and correct).
+- The finding is about a pre-existing issue not introduced by the change.
+
+Be conservative — when in doubt, keep the finding.
+
+#### 4c. Assign priorities
+
+Assign a priority to each remaining finding using these levels:
+
+| Priority | Meaning | Action |
+|----------|---------|--------|
+| P0 | Critical — blocks merge, causes crashes/data loss/security breach | Must fix before merge |
+| P1 | Major — significant issue affecting correctness, security, or maintainability | Must fix |
+| P2 | Minor — real issue but low impact, improvement opportunity | Nice to fix |
+| P3 | Suggestion — nitpick, style preference, optional enhancement | Optional |
+
+When assigning priorities, consider:
+- **Cross-criteria signal**: A finding flagged by multiple criteria (e.g., both architecture and security) is likely more important.
+- **Blast radius**: Issues affecting hot paths, public APIs, or security boundaries deserve higher priority.
+- **Confidence**: Findings confirmed by multiple models (hard PRs) or backed by concrete evidence deserve higher priority than speculative ones.
+- **Context**: The same issue type may deserve different priorities depending on the codebase and change context.
+
+#### 4d. Format output
+
+Sort by priority (P0 first), then by file path. Each finding must be a standalone entry — do NOT bundle multiple distinct issues into a single row even if they are related.
 
 ```
 ## Comprehensive Review Findings

@@ -83,13 +83,23 @@ Look at the list of changed files. If any `.md` files are present in the diff, r
 
 ### Step 3: Assess complexity
 
-Evaluate the PR complexity based on the diff and metadata gathered above. **Only consider changes to production/implementation code** — exclude test files (e.g., `*_test.*`, `*.test.*`, `*.spec.*`, `**/test/**`, `**/tests/**`, `**/__tests__/**`) and documentation files (e.g., `*.md`) when counting lines changed and files changed. Classify as one of:
+Evaluate the PR complexity based on the diff and metadata gathered above. **Only consider changes to production/implementation code** — documentation files (e.g., `*.md`) when counting lines changed and files changed. Classify as one of:
 
-- **simple**: Small, focused change. Typically ≤ 100 lines of implementation code changed across ≤ 3 non-test/non-doc files, single concern (e.g., bug fix, config tweak, copy change, dependency bump, simple refactor).
-- **medium**: Moderate change. Typically 100–500 lines of implementation code changed or 4–10 non-test/non-doc files, may touch multiple modules but follows a clear pattern (e.g., adding a new endpoint, refactoring a module, implementing a straightforward feature).
-- **hard**: Large or complex change. Typically > 500 lines of implementation code changed or > 10 non-test/non-doc files, or involves architectural changes, cross-cutting concerns, new subsystems, complex business logic, security-sensitive code, or significant API surface changes. Any change that is hard to reason about or has high blast radius.
+- **simple**: Small, focused change. Typically ≤ 100 lines of implementation code changed across ≤ 3 non-doc files, single concern (e.g., bug fix, config tweak, copy change, dependency bump, simple refactor).
+- **medium**: Moderate change. Typically 100–500 lines of implementation code changed or 4–10 non-doc files, may touch multiple modules but follows a clear pattern (e.g., adding a new endpoint, refactoring a module, implementing a straightforward feature).
+- **hard**: Large or complex change. Typically > 500 lines of implementation code changed or > 10 non-doc files, or involves architectural changes, cross-cutting concerns, new subsystems, complex business logic, security-sensitive code, or significant API surface changes. Any change that is hard to reason about or has high blast radius.
 
-Use the PR metadata (additions, deletions, changedFiles, files list) for quantitative assessment — filter out test and documentation files from the counts using the file paths in the metadata. Do NOT read the full diff file to assess complexity; the file list and line counts from metadata are sufficient for this step. The qualitative assessment should be based on the nature of the changed files (their paths and roles in the system), not on reading the diff content. The qualitative assessment matters more than raw numbers — a 200-line architectural change can be "hard" while a 600-line generated migration can be "simple".
+Increase complexity one level if any of the following apply, or two levels if multiple apply:
+
+- **New subsystem or framework**: Adds a coherent new module spanning multiple architectural layers (not just modifying existing files)
+- **Security-critical paths**: Touches authentication, authorization, token management, OAuth/OIDC, cryptography, or access control
+- **Shared infrastructure + new dependents**: Modifies shared code (base classes, utilities, middleware) AND adds new code depending on those modifications
+- **Concurrency primitives**: Introduces or modifies threads, locks, queues, atomic operations, or async concurrency patterns
+- **Cross-file API contract dependencies**: Correctness depends on implicit contracts with non-diff code (e.g., key lookups, registry patterns, framework conventions)
+- **Feature flag / version guard consistency**: Adds conditional guards that must stay consistent with existing guards elsewhere in the codebase
+- **Multi-domain / cross-cutting scope**: Changes span many distinct product domains or subsystem directories, especially if broader than the PR title suggests
+- **Interface or abstract contract changes**: Modifies shared interfaces, abstract classes, or base methods with multiple implementations — especially when not all implementations are updated
+- **API response or error contract mutations**: Modifies existing response structures, status codes, or content types in endpoint handlers or serializers
 
 ## Required Output
 

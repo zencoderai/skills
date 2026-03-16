@@ -27,16 +27,9 @@ Read the diff from the file path provided in the input.
 
 Review against two tiers using the checklist below.
 
-#### Priority Levels
+**Note:** Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.). Report findings as a flat list. The root agent will filter false positives and assign final priorities after reviewing all findings across all criteria.
 
-| Level | Meaning | Action |
-|-------|---------|--------|
-| P0 | Critical — crashes, data corruption, incorrect behavior in common paths | Must fix |
-| P1 | Major — significant bug, broken feature, incorrect output | Must fix |
-| P2 | Minor — edge case handling, defensive improvements | Nice to fix |
-| P3 | Suggestion — robustness enhancement | Optional |
-
-#### Critical Issues (P0–P1)
+#### What to look for — critical issues
 
 **Logic Errors:**
 - Incorrect conditional logic (wrong operators, inverted conditions)
@@ -45,6 +38,8 @@ Review against two tiers using the checklist below.
 - Incorrect operator precedence
 - Broken control flow (missing breaks, wrong returns)
 - Incorrect algorithm implementation
+- Language/runtime semantic traps (truthiness of valid zero/empty values like `0`, `0.0`, `""`, `[]`; non-deterministic builtins like `hash()` used for cross-process/persistent keys; implicit type coercion)
+- New library/framework calls in control-flow-sensitive code (CLI handlers, middleware, lifecycle hooks) that may have non-obvious side effects (e.g., process termination, swallowed errors) or may not exist in the project's supported runtime versions
 
 **Edge Cases:**
 - Null/undefined not handled where possible
@@ -53,6 +48,9 @@ Review against two tiers using the checklist below.
 - Missing error handling for expected failures
 - Division by zero possibilities
 - Integer overflow/underflow risks
+- Paired/matched iteration where one collection may be exhausted before the other
+- Platform-specific behavior (OS-dependent commands, path formats, line endings). For shell scripts, Dockerfiles, and CI helpers, check for OS-specific assumptions (BSD vs GNU `sed`, bashisms, path handling)
+- Boundary-driven interaction bugs in stateful flows (pagination, cursors, offsets, navigation): simulate boundary values (0, < limit, == limit)
 
 **State Management:**
 - Incorrect state transitions
@@ -61,6 +59,8 @@ Review against two tiers using the checklist below.
 - Stale state causing wrong behavior
 - Missing state initialization
 - State not cleaned up properly
+- Shared state (caches, globals) overwritten with invalid values on failure paths, erasing previously valid data
+- Lifecycle/shutdown/cleanup paths: verify that `break`/`return` in timeout/deadline-driven loops does not skip cleanup of remaining resources
 
 **Data Handling:**
 - Incorrect data transformations
@@ -69,6 +69,9 @@ Review against two tiers using the checklist below.
 - Incorrect encoding/decoding
 - Missing data validation
 - Truncation of important data
+- Values valid in one code path but invalid in alternative dispatch branches
+- Data migration/canonicalization mismatches: when storage or lookup behavior changes with a migration/backfill, verify that legacy values survive through old format → migration → new write normalization → new lookup path
+- Identifier canonicalization mismatches: when membership tests, caches, or paired load/lookup logic use identifiers, verify that logically identical inputs are normalized to a single canonical form (e.g., `String` vs `Symbol`, case variants, normalized paths)
 
 **API Contract:**
 - Return values don't match declared types
@@ -76,15 +79,26 @@ Review against two tiers using the checklist below.
 - Callbacks called incorrectly (wrong args, multiple calls)
 - Exceptions thrown where not declared
 - Side effects not matching documentation
+- Breaking changes to existing response formats, error shapes, or status codes (compare pre/post success and error status codes plus response body shapes for every changed endpoint)
+- Call sites not satisfying new/modified method preconditions or signatures
+- When arguments's format/domain is broadened or changed, verify the new value is valid in every conditional backend/implementation that consumes it (feature-flagged paths, external tool adapters, alternative dispatch branches)
 
 **Concurrency:**
 - Race conditions between threads/processes
 - Deadlock possibilities
 - Missing synchronization on shared state
-- Atomicity violations
+- Atomicity violations (for every new database/state write, identify whether it is a read-modify-write on shared state and verify it uses an atomic primitive, transaction, or lock)
 - Order-of-operations bugs in async code
 
-#### Robustness (P2–P3)
+**Cross-Reference Consistency:**
+- When code is removed or replaced, verify all consumption sites (callers, templates, other rendering paths) still work correctly
+- For paired operations (create↔lookup, enable↔cleanup, write↔read, cache-write↔cache-invalidate, bind-state↔fetch-state), verify both sides use matching identifiers, parameters, and canonical forms. When models are reconstructed or translated, verify stable fields like `id`, `type`, timestamps are preserved
+- When code is refactored, split, or moved, verify that behavior is preserved in every new code path, unless the change in behavior was intended. Still do one focused pass over touched code for concrete defects that remain present in changed lines (wrong return values, stale data, redundant re-queries)
+- Trace realistic user scenarios through chains of related functions to verify they compose correctly at boundaries
+- For newly introduced or modified guards/predicates/helpers shared across paths, build a state matrix of key input variants (e.g., `null` vs present, initial vs re-entry, empty collection) and compare before-vs-after behavior
+- For new state/session/pipeline fields: trace all writes and reads across redirects, retries, and alternate entry paths; verify every read is either guaranteed initialized or safely guarded when absent
+
+#### What to look for — robustness
 
 **Defensive Coding:**
 - Assertions missing for preconditions
@@ -99,12 +113,30 @@ Review against two tiers using the checklist below.
 - Error messages not helpful for debugging
 - Missing error recovery
 - Errors not propagated correctly
+- Unhandled rejections at newly introduced `await`/dynamic import/async boundaries
 
 **Testing Gaps:**
 - Obvious test cases missing
 - Code paths that can't be tested
 - Behavior changes that need test updates
+- When production code changes parameters, return types, or contracts, verify modified tests/mocks actually represent the new inputs and side effects
+- Test names/docstrings that do not match the test body (e.g., `test_empty_array` that actually tests an empty dict)
 - Edge cases without test coverage
+
+#### Systematic Error-Path Analysis
+
+For every new or modified operation that can fail (I/O, network, parsing, type assertions, dynamic imports, external calls):
+
+1. **Identify the failure point** — what can go wrong and what value/exception is produced on failure.
+2. **Trace the failure path forward** — follow the error through the code and check:
+   - Is the error propagated to callers, or silently swallowed/ignored?
+   - Are local variables, shared state, or caches left in a consistent state? (Valid data must not be overwritten with nil/null/zero on error. Verify that failure does not erase previously valid cached values.)
+   - Are acquired resources (locks, file handles, connections) released on failure?
+   - If the operation partially mutated state before failing, is the mutation rolled back or otherwise left safe?
+3. **Report any path** where failure leads to state corruption, data loss, or silent misbehavior.
+
+**Stub/Placeholder Completeness:**
+- For newly added files/functions, check for stub patterns like `"not implemented"`, `panic("TODO")`, empty bodies, or unconditional guard logic that makes the feature incomplete end-to-end.
 
 **Principles:**
 - Only flag issues **introduced by the change**, not pre-existing problems.
@@ -121,24 +153,19 @@ Output this format:
 ```
 ## Bug Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Bug Risk**: [NONE | LOW | MEDIUM | HIGH | CRITICAL]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: assessment of bug risk in this change]
 
 ### Findings
 
-| Priority | Bug | Type | Location |
-|----------|-----|------|----------|
-| P0 | Description | Logic Error | link to specific line in file |
-| P1 | Description | Edge Case | link to specific line in file |
-| P2 | Description | State Issue | link to specific line in file |
+| # | Bug | Type | Location |
+|---|-----|------|----------|
+| 1 | Description | Logic Error | link to specific line in file |
+| 2 | Description | Edge Case | link to specific line in file |
 
 ### Details
 
-#### [P0/P1] Issue title
+#### 1. Issue title
 **File:** link to specific line in file
 **Type:** [Logic Error | Edge Case | State Management | Data Handling | API Contract | Concurrency]
 
@@ -171,7 +198,7 @@ fixed code that handles the case correctly
 test that would catch this bug
 \```
 
-(Repeat for each P0/P1 finding. P2/P3 items only need the table entry unless reproduction steps or test cases add value.)
+(Repeat for each finding that warrants detail.)
 
 ### Edge Cases to Consider
 [List of edge cases that should be verified — either tested or manually confirmed]
@@ -181,10 +208,10 @@ test that would catch this bug
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no P0 or P1 findings.
-- Use `REQUEST CHANGES` when P0 or P1 findings exist.
-- Use `NEEDS DISCUSSION` when behavior is ambiguous and could be intentional.
 - Include reproduction scenarios for bugs to help verify fixes.
 - Suggest test cases that would prevent regressions.
-- Include corrected code for every P0 and P1 finding.
+- Include corrected code for significant findings.
 - Focus on bugs and logic errors, not code style, performance, or requirements compliance (unless they directly cause bugs).
+- Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
+- Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding even if they are related.
