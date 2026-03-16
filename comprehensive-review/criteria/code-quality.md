@@ -27,16 +27,9 @@ Read the diff from the file path provided in the input.
 
 Review against two tiers using the checklist below.
 
-#### Priority Levels
+**Note:** Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.). Report findings as a flat list. The root agent will filter false positives and assign final priorities after reviewing all findings across all criteria.
 
-| Level | Meaning | Action |
-|-------|---------|--------|
-| P0 | Critical — severely impacts maintainability, impossible to understand | Must fix |
-| P1 | Major — significantly reduces code quality, maintenance burden | Must fix |
-| P2 | Minor — code smell, readability issue, inconsistency | Nice to fix |
-| P3 | Suggestion — polish, style improvement | Optional |
-
-#### Critical Issues (P0–P1)
+#### What to look for — critical issues
 
 **Readability:**
 - Incomprehensible code logic
@@ -74,7 +67,7 @@ Review against two tiers using the checklist below.
 - Unused imports, variables, or functions
 - Copy-paste code with minor variations
 
-#### Quality Improvements (P2–P3)
+#### What to look for — quality improvements
 
 **Clarity:**
 - Nested ternaries that could be if/switch
@@ -93,6 +86,7 @@ Review against two tiers using the checklist below.
 **Documentation:**
 - Missing function/method documentation
 - Outdated comments that don't match code
+- Error messages, logs, labels, and copied strings that do not accurately describe the current endpoint/flow/action, especially when similar logic is duplicated between related paths
 - Comments that explain "what" instead of "why"
 - Missing examples for complex APIs
 - Undocumented assumptions or preconditions
@@ -111,6 +105,13 @@ Review against two tiers using the checklist below.
 - Reimplementing standard library functions
 - Over-engineering simple problems
 
+**Test Quality:**
+- Tests catching overly broad exception types instead of the specific expected exception
+- Test names that do not accurately describe the scenario being tested
+- Assertions too loose to validate the intended behavior
+- Modified tests/mocks that do not reflect changed production contracts (new parameters, return types, side effects)
+- Fixed `sleep()` calls used to wait for async/background work
+
 **Principles:**
 - Only flag issues **introduced by the change**, not pre-existing problems.
 - Prefer explicit, readable code over clever one-liners.
@@ -125,25 +126,20 @@ Output this format:
 ```
 ## Code Quality Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Quality Level**: [HIGH | ACCEPTABLE | NEEDS WORK | POOR]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: quality assessment of this change and overall impression]
 
 ### Findings
 
-| Priority | Issue | Type | Location |
-|----------|-------|------|----------|
-| P0 | Description | Readability | file:line |
-| P1 | Description | Naming | file:line |
-| P2 | Description | Consistency | file:line |
+| # | Issue | Type | Location |
+|---|-------|------|----------|
+| 1 | Description | Readability | link to specific line in file |
+| 2 | Description | Naming | link to specific line in file |
 
 ### Details
 
-#### [P0/P1] Issue title
-**File:** `path/to/file.ext:line`
+#### 1. Issue title
+**File:** link to specific line in file
 **Type:** [Readability | Naming | Complexity | Organization | Duplication]
 
 **Description:**
@@ -161,7 +157,7 @@ cleaner, more readable code
 
 **Why this is better:** Brief explanation of the improvement.
 
-(Repeat for each P0/P1 finding. P2/P3 items only need the table entry unless a code suggestion adds significant clarity.)
+(Repeat for each finding that warrants detail.)
 
 ### Positive Aspects
 [Brief mention of things done well — good naming, clear structure, etc.]
@@ -171,10 +167,9 @@ cleaner, more readable code
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no P0 or P1 findings.
-- Use `REQUEST CHANGES` when P0 or P1 findings exist.
-- Use `NEEDS DISCUSSION` when quality trade-offs need team consensus.
-- Include improved code examples for every P0 and P1 finding.
+- Include improved code examples for significant findings.
 - Acknowledge positive aspects to provide balanced feedback.
-- P2/P3 findings go in the table; add detail only when code examples help.
 - Focus on maintainability impact, not personal style preferences.
+- Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
+- Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding.

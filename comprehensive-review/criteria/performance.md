@@ -27,16 +27,9 @@ Read the diff from the file path provided in the input.
 
 Review against two tiers using the checklist below.
 
-#### Priority Levels
+**Note:** Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.). Report findings as a flat list. The root agent will filter false positives and assign final priorities after reviewing all findings across all criteria.
 
-| Level | Meaning | Action |
-|-------|---------|--------|
-| P0 | Critical — severe performance regression, system instability risk | Must fix |
-| P1 | Major — significant performance issue affecting user experience | Must fix |
-| P2 | Minor — suboptimal performance, optimization opportunity | Nice to fix |
-| P3 | Suggestion — micro-optimization, marginal improvement | Optional |
-
-#### Critical Issues (P0–P1)
+#### What to look for — critical issues
 
 **Algorithmic Efficiency:**
 - O(n²) or worse where O(n) or O(n log n) is possible
@@ -53,6 +46,7 @@ Review against two tiers using the checklist below.
 - Missing connection pooling
 - Synchronous I/O blocking async contexts
 - Sequential I/O that could be parallelized
+- Re-fetching data from external source when already available in local variables or function parameters
 
 **Memory Management:**
 - Memory leaks (unreleased resources, growing caches)
@@ -84,7 +78,7 @@ Review against two tiers using the checklist below.
 - Missing timeouts causing resource exhaustion
 - Unnecessary round-trips
 
-#### Performance Optimizations (P2–P3)
+#### What to look for — optimizations
 
 **Efficiency Improvements:**
 - Using less efficient data structures (list vs. set for membership)
@@ -126,25 +120,20 @@ Output this format:
 ```
 ## Performance Review
 
-**Verdict**: [APPROVE | REQUEST CHANGES | NEEDS DISCUSSION]
-**Impact Level**: [CRITICAL | HIGH | MEDIUM | LOW]
-**Confidence**: [HIGH | MEDIUM | LOW]
-
 ### Summary
 [1-2 sentences: performance impact of this change and overall assessment]
 
 ### Findings
 
-| Priority | Issue | Complexity/Impact | Location |
-|----------|-------|-------------------|----------|
-| P0 | Description | O(n²) → O(n) | file:line |
-| P1 | Description | +50ms latency | file:line |
-| P2 | Description | Minor | file:line |
+| # | Issue | Complexity/Impact | Location |
+|---|-------|-------------------|----------|
+| 1 | Description | O(n²) → O(n) | link to specific line in file |
+| 2 | Description | +50ms latency | link to specific line in file |
 
 ### Details
 
-#### [P0/P1] Issue title
-**File:** `path/to/file.ext:line`
+#### 1. Issue title
+**File:** link to specific line in file
 **Type:** [Algorithm | Database | Memory | Concurrency | I/O]
 
 **Description:**
@@ -167,7 +156,7 @@ improved code with better performance characteristics
 
 **Expected improvement:** [Quantified improvement estimate]
 
-(Repeat for each P0/P1 finding. P2/P3 items only need the table entry unless optimization code helps.)
+(Repeat for each finding that warrants detail.)
 
 ### Performance Impact Summary
 [Brief assessment of overall performance impact — latency, throughput, memory, scalability]
@@ -180,10 +169,10 @@ improved code with better performance characteristics
 ```
 
 **Rules:**
-- Use `APPROVE` only when there are no P0 or P1 findings.
-- Use `REQUEST CHANGES` when P0 or P1 findings exist.
-- Use `NEEDS DISCUSSION` when performance trade-offs need benchmarking or team consensus.
 - Include complexity analysis (Big-O) when relevant.
 - Quantify expected impact when possible.
-- Provide optimized code for every P0 and P1 finding.
+- Provide optimized code for significant findings.
 - Consider the full request lifecycle, not just the changed code in isolation.
+- Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
+- Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
+- Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding.
