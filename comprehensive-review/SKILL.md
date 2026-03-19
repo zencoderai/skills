@@ -244,4 +244,4 @@ IMPORTANT: Do NOT invoke the Skill tool. All instructions you need are in the fi
 
 If user added custom notes to a finding, update description and/or suggested fix according to these notes.
 
-Use a subagent tool to spawn the subagent. Use a cheap/fast model since this is a data-posting task that doesn't require deep reasoning.
+Use a subagent tool to spawn the subagent. Use a medium-price model — this task requires reliably following strict API protocols and error handling rules.

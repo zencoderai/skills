@@ -11,6 +11,14 @@ You will receive:
 - **Diff file path**: Absolute path to the saved diff file
 - **Findings**: A list of findings to post, each with priority, title, description, file, line, review type, suggested fix
 
+## Non-negotiable execution rules
+
+- You may call `POST /pulls/{PR}/reviews` at most **2 times total**: the initial attempt and one fallback.
+- Do NOT make probe, diagnostic, subset, or single-finding review posts.
+- Do NOT use the live PR to test whether individual lines are accepted.
+- Every API call creates permanent, visible comments — treat each call as irreversible.
+- After any successful 2xx review creation, stop immediately. Do NOT make verification calls.
+
 ## Workflow
 
 ### Step 1: Generate hunk map from the diff file
@@ -36,7 +44,7 @@ The hunk map is a small JSON with this structure:
       "path": "src/foo.ts",
       "status": "modified",
       "hunks": [
-        { "old_start": 10, "old_count": 5, "new_start": 10, "new_count": 8 }
+        { "old_start": 10, "old_count": 5, "new_start": 10, "new_count": 8, "added_lines": [12, 13, 15] }
       ]
     }
   ]
@@ -46,7 +54,7 @@ The hunk map is a small JSON with this structure:
 For each finding, determine whether the finding's file and line fall within a diff hunk:
 
 1. Find the file entry in the hunk map whose `path` matches the finding's file.
-2. A line number `L` is **valid for inline commenting** if there exists a hunk where `new_start <= L < new_start + new_count`. **Note**: the hunk map is derived from the locally-saved diff; the GitHub API uses its own internal diff which may differ slightly. A line within the hunk map's range is likely valid but not guaranteed to be accepted by the API.
+2. A line number `L` is **valid for inline commenting** if it appears in the `added_lines` array of any hunk for that file. Prefer targeting actually added/modified lines over context lines within the hunk range. If `added_lines` is available, use it as the authoritative source; otherwise fall back to checking `new_start <= L < new_start + new_count`.
 3. For each finding:
    - If the line **is valid**: add it as an inline comment using `"path": "<file>", "line": <L>, "side": "RIGHT"`.
    - If the line **is NOT valid** (file not in hunk map, or line outside all hunks for that file):
@@ -101,11 +109,13 @@ Check the response from the API call:
 
 If the API returns HTTP 422 with `"Line could not be resolved"`:
 
-1. Do **NOT** retry with different line numbers and do **NOT** post test or debug reviews to the PR.
-2. Move the affected finding(s) from the `comments` array into the review `body` with full details (priority, description, file:line reference, suggested fix). Keep findings that succeeded as inline comments in the `comments` array.
-3. Rebuild the payload and post again with the reduced `comments` array (or empty `comments` if all findings moved to body).
+1. Do **NOT** make any additional API calls to identify which comment failed.
+2. Do **NOT** test findings individually or in subsets.
+3. Move **ALL** findings from `comments` into the review `body` with full details (priority, description, file:line reference, suggested fix).
+4. Set `comments` to `[]`.
+5. Post the rebuilt payload exactly once.
 
-This should take at most **one retry**. Do not attempt more than two total API calls for posting.
+You are allowed exactly **one** initial attempt and **one** fallback. Never make 3+ API calls to the reviews endpoint.
 
 ## Requirements for the API call
 

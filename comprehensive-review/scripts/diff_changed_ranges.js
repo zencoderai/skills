@@ -8,7 +8,7 @@
 //         "path": "src/foo.ts",
 //         "status": "modified",
 //         "hunks": [
-//           { "old_start": 10, "old_count": 5, "new_start": 10, "new_count": 8 }
+//           { "old_start": 10, "old_count": 5, "new_start": 10, "new_count": 8, "added_lines": [12, 13, 15] }
 //         ]
 //       }
 //     ]
@@ -47,6 +47,8 @@ function parseUnifiedDiff(diffText) {
   let currentNewPath = "";
   let currentFileKey = "";
   let currentHunks = [];
+  let currentHunk = null;
+  let newLineNum = 0;
 
   function flush() {
     if (!currentFileKey) return;
@@ -59,6 +61,7 @@ function parseUnifiedDiff(diffText) {
     currentNewPath = "";
     currentFileKey = "";
     currentHunks = [];
+    currentHunk = null;
   }
 
   for (const rawLine of diffText.split("\n")) {
@@ -77,6 +80,7 @@ function parseUnifiedDiff(diffText) {
         currentFileKey = "";
       }
       currentHunks = [];
+      currentHunk = null;
       continue;
     }
 
@@ -94,13 +98,27 @@ function parseUnifiedDiff(diffText) {
 
     const match = line.match(HUNK_HEADER_RE);
     if (match) {
-      currentHunks.push({
+      currentHunk = {
         old_start: parseInt(match[1], 10),
         old_count: parseInt(match[2] ?? "1", 10),
         new_start: parseInt(match[3], 10),
         new_count: parseInt(match[4] ?? "1", 10),
-      });
+        added_lines: [],
+      };
+      newLineNum = currentHunk.new_start;
+      currentHunks.push(currentHunk);
       continue;
+    }
+
+    if (currentHunk) {
+      if (line.startsWith("+")) {
+        currentHunk.added_lines.push(newLineNum);
+        newLineNum++;
+      } else if (line.startsWith("-")) {
+        // deleted line — no new-side line number advancement
+      } else {
+        newLineNum++;
+      }
     }
   }
 
