@@ -213,35 +213,42 @@ For each finding the user chose "Fix":
 
 **Skip this step entirely if no findings were marked "Post comment".**
 
-Only applies in PR mode. Call a subagent to post line-specific comments via the GitHub Reviews API.
+Only applies in PR mode. Post line-specific comments via the `post_review.js` script.
 
-**CRITICAL**: You MUST spawn a subagent for this step. Do NOT perform the comment posting yourself. Do NOT read the file `<SKILL_DIRECTORY>/post-comments.md` yourself. The subagent must read it and follow its instructions.
+#### 7a. Build the review payload JSON
 
-Construct the subagent prompt as follows:
+Construct a JSON object with this structure:
 
+```json
+{
+  "event": "COMMENT",
+  "body": "## Comprehensive Code Review\n\n### Findings Summary\n\n| Priority | Issue | Location | Review type |\n|----------|-------|----------|------------|\n| P0 | Issue title | `path/to/file.ts:42` | code-quality(gpt-5-3-codex) |\n\n### Recommendation\n[Concise recommendation]",
+  "comments": [
+    {
+      "path": "path/to/file.ts",
+      "line": 42,
+      "side": "RIGHT",
+      "body": "**[P0] Issue Title** (review type: code-quality(gpt-5-3-codex))\n\nDescription.\n\n**Suggested fix:**\n```\ncode\n```"
+    }
+  ]
+}
 ```
-Read the file `<SKILL_DIRECTORY>/post-comments.md` for detailed instructions, then follow them.
 
-Owner: <OWNER>
-Repo: <REPO>
-PR Number: <PR_NUMBER>
-Diff file path: <absolute path to diff file>
-
-Findings to post:
-
-<For each finding marked "Post comment", include:>
-### Finding <#>
-- **Priority**: <priority>
-- **Title**: <issue title>
-- **File**: <file path>
-- **Line**: <line number>
-- **Review type**: <review type with model names>
-- **Description**: <description>
-- **Suggested fix**: <suggested fix or "None">
-
-IMPORTANT: Do NOT invoke the Skill tool. All instructions you need are in the file specified above.
-```
+For each finding marked "Post comment":
+- `path`: the file path relative to repo root
+- `line`: the line number in the NEW version of the file
+- `side`: `RIGHT` for new/modified code, `LEFT` for deleted code
+- `body`: include priority, title, review type with model name, description, and suggested fix
+- Each finding gets its own comment — do NOT merge multiple findings into one comment
 
 If user added custom notes to a finding, update description and/or suggested fix according to these notes.
 
-Use a subagent tool to spawn the subagent. Use a cheap/fast model since this is a data-posting task that doesn't require deep reasoning.
+Save the JSON to a file (e.g. `/tmp/review_payload.json`).
+
+#### 7b. Post via the script
+
+```bash
+cat /tmp/review_payload.json | node <SKILL_DIRECTORY>/scripts/post_review.js <OWNER>/<REPO> <PR_NUMBER> <diff-file-path>
+```
+
+The script automatically validates comment line numbers against the diff, adjusts lines within 5 lines of a valid range, moves out-of-range comments to the review body, handles 422 errors, and retries recoverable failures. It logs progress to stderr and outputs the final API response to stdout.
