@@ -243,12 +243,12 @@ For each finding marked "Post comment":
 
 If user added custom notes to a finding, update description and/or suggested fix according to these notes.
 
-Save the JSON to a file (e.g. `/tmp/review_payload.json`).
+Save the JSON to a file named `/tmp/review_payload-<branch-name>.json`.
 
 #### 7b. Post via the script
 
 ```bash
-cat /tmp/review_payload.json | node <SKILL_DIRECTORY>/scripts/post_review.js <OWNER>/<REPO> <PR_NUMBER> <diff-file-path>
+node <SKILL_DIRECTORY>/scripts/post_review.js <OWNER>/<REPO> <PR_NUMBER> <diff-file-path> /tmp/review_payload-<branch-name>.json
 ```
 
-The script automatically validates comment line numbers against the diff, adjusts lines within 5 lines of a valid range, moves out-of-range comments to the review body, handles 422 errors, and retries recoverable failures. It logs progress to stderr and outputs the final API response to stdout.
+The script validates comment line numbers against the diff and adjusts them if required. It logs progress and any errors (even if they were recoverable). It outputs in the end whether the review was posted successfully.
