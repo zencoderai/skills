@@ -110,21 +110,26 @@ function parseUnifiedDiff(diffText) {
   return files;
 }
 
-function isLineInHunk(hunk, line) {
+function isLineInHunk(hunk, line, side) {
+  if (side === "LEFT") {
+    return line >= hunk.old_start && line < hunk.old_start + hunk.old_count;
+  }
   return line >= hunk.new_start && line < hunk.new_start + hunk.new_count;
 }
 
-function findNearestValidLine(hunks, line) {
+function findNearestValidLine(hunks, line, side) {
   let bestLine = null;
   let bestDist = Infinity;
 
   for (const hunk of hunks) {
-    if (hunk.new_count === 0) continue;
+    const count = side === "LEFT" ? hunk.old_count : hunk.new_count;
+    const start = side === "LEFT" ? hunk.old_start : hunk.new_start;
+    if (count === 0) continue;
 
-    const hunkStart = hunk.new_start;
-    const hunkEnd = hunk.new_start + hunk.new_count - 1;
+    const hunkStart = start;
+    const hunkEnd = start + count - 1;
 
-    if (isLineInHunk(hunk, line)) {
+    if (isLineInHunk(hunk, line, side)) {
       return { line, distance: 0 };
     }
 
@@ -167,7 +172,8 @@ function adjustComments(payload, hunkMap) {
       continue;
     }
 
-    const nearest = findNearestValidLine(fileEntry.hunks, comment.line);
+    const side = comment.side || "RIGHT";
+    const nearest = findNearestValidLine(fileEntry.hunks, comment.line, side);
 
     if (!nearest) {
       bodyFindings.push(comment);

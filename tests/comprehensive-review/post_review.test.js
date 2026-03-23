@@ -208,6 +208,54 @@ describe("isLineInHunk", () => {
   it("returns false for line far away", () => {
     assert.equal(isLineInHunk(hunk, 100), false);
   });
+
+  it("defaults to RIGHT side when side is omitted", () => {
+    assert.equal(isLineInHunk(hunk, 17), true);  // new_start+new_count-1 = 17
+    assert.equal(isLineInHunk(hunk, 18), false);
+  });
+
+  it("checks old_start/old_count for LEFT side", () => {
+    // old range: 10..14 (old_start=10, old_count=5)
+    assert.equal(isLineInHunk(hunk, 10, "LEFT"), true);
+    assert.equal(isLineInHunk(hunk, 14, "LEFT"), true);
+    assert.equal(isLineInHunk(hunk, 15, "LEFT"), false);  // one past old end
+    assert.equal(isLineInHunk(hunk, 9, "LEFT"), false);
+  });
+
+  it("checks new_start/new_count for explicit RIGHT side", () => {
+    assert.equal(isLineInHunk(hunk, 17, "RIGHT"), true);
+    assert.equal(isLineInHunk(hunk, 18, "RIGHT"), false);
+  });
+
+  it("handles asymmetric old/new ranges on LEFT vs RIGHT", () => {
+    const asymHunk = { new_start: 5, new_count: 10, old_start: 20, old_count: 3 };
+    // RIGHT: 5..14
+    assert.equal(isLineInHunk(asymHunk, 5, "RIGHT"), true);
+    assert.equal(isLineInHunk(asymHunk, 14, "RIGHT"), true);
+    assert.equal(isLineInHunk(asymHunk, 15, "RIGHT"), false);
+    assert.equal(isLineInHunk(asymHunk, 20, "RIGHT"), false);
+    // LEFT: 20..22
+    assert.equal(isLineInHunk(asymHunk, 20, "LEFT"), true);
+    assert.equal(isLineInHunk(asymHunk, 22, "LEFT"), true);
+    assert.equal(isLineInHunk(asymHunk, 23, "LEFT"), false);
+    assert.equal(isLineInHunk(asymHunk, 5, "LEFT"), false);
+  });
+
+  it("returns false for LEFT side on new file hunk (old_count=0)", () => {
+    const newFileHunk = { new_start: 1, new_count: 10, old_start: 0, old_count: 0 };
+    assert.equal(isLineInHunk(newFileHunk, 1, "LEFT"), false);
+    assert.equal(isLineInHunk(newFileHunk, 0, "LEFT"), false);
+    assert.equal(isLineInHunk(newFileHunk, 1, "RIGHT"), true);
+  });
+
+  it("returns false for RIGHT side on deleted file hunk (new_count=0)", () => {
+    const delFileHunk = { new_start: 0, new_count: 0, old_start: 1, old_count: 5 };
+    assert.equal(isLineInHunk(delFileHunk, 1, "RIGHT"), false);
+    assert.equal(isLineInHunk(delFileHunk, 0, "RIGHT"), false);
+    assert.equal(isLineInHunk(delFileHunk, 1, "LEFT"), true);
+    assert.equal(isLineInHunk(delFileHunk, 5, "LEFT"), true);
+    assert.equal(isLineInHunk(delFileHunk, 6, "LEFT"), false);
+  });
 });
 
 describe("findNearestValidLine", () => {
@@ -251,7 +299,7 @@ describe("findNearestValidLine", () => {
     assert.equal(result, null);
   });
 
-  it("skips zero-count hunks (pure deletions)", () => {
+  it("skips zero-count hunks (pure deletions) on RIGHT side", () => {
     const deletionHunks = [{ new_start: 9, new_count: 0, old_start: 9, old_count: 3 }];
     const result = findNearestValidLine(deletionHunks, 9);
     assert.equal(result, null);
@@ -263,6 +311,67 @@ describe("findNearestValidLine", () => {
       4
     );
     assert.equal(result, null);
+  });
+
+  // LEFT side tests
+  it("returns distance 0 for LEFT side line inside old range", () => {
+    const result = findNearestValidLine(hunks, 12, "LEFT");
+    assert.equal(result.line, 12);
+    assert.equal(result.distance, 0);
+  });
+
+  it("snaps to old hunk start for LEFT side when line is above", () => {
+    const result = findNearestValidLine(hunks, 7, "LEFT");
+    assert.equal(result.line, 10);
+    assert.equal(result.distance, 3);
+  });
+
+  it("snaps to old hunk end for LEFT side when line is below", () => {
+    const result = findNearestValidLine(hunks, 16, "LEFT");
+    assert.equal(result.line, 14);
+    assert.equal(result.distance, 2);
+  });
+
+  it("uses old_count for LEFT side boundary", () => {
+    const asymHunks = [{ new_start: 10, new_count: 20, old_start: 10, old_count: 3 }];
+    // old range is 10..12, new range is 10..29
+    // Line 15 on LEFT should snap to 12 (old end), distance 3
+    const result = findNearestValidLine(asymHunks, 15, "LEFT");
+    assert.equal(result.line, 12);
+    assert.equal(result.distance, 3);
+    // Same line on RIGHT should be inside the hunk
+    const resultR = findNearestValidLine(asymHunks, 15, "RIGHT");
+    assert.equal(resultR.line, 15);
+    assert.equal(resultR.distance, 0);
+  });
+
+  it("finds valid line on LEFT side for deletion hunk (new_count=0)", () => {
+    const deletionHunks = [{ new_start: 0, new_count: 0, old_start: 1, old_count: 5 }];
+    // RIGHT returns null (new_count=0), LEFT returns the line
+    assert.equal(findNearestValidLine(deletionHunks, 3, "RIGHT"), null);
+    const result = findNearestValidLine(deletionHunks, 3, "LEFT");
+    assert.equal(result.line, 3);
+    assert.equal(result.distance, 0);
+  });
+
+  it("returns null for LEFT side on new file hunk (old_count=0)", () => {
+    const newFileHunks = [{ new_start: 1, new_count: 100, old_start: 0, old_count: 0 }];
+    assert.equal(findNearestValidLine(newFileHunks, 1, "LEFT"), null);
+    // But RIGHT works fine
+    const result = findNearestValidLine(newFileHunks, 50, "RIGHT");
+    assert.equal(result.line, 50);
+    assert.equal(result.distance, 0);
+  });
+
+  it("snaps LEFT side line to nearest old hunk boundary across multiple hunks", () => {
+    const multiHunks = [
+      { new_start: 10, new_count: 10, old_start: 10, old_count: 3 },  // old: 10..12
+      { new_start: 50, new_count: 10, old_start: 30, old_count: 5 },  // old: 30..34
+    ];
+    // Line 20 on LEFT: closer to hunk1 end (12, dist=8) than hunk2 start (30, dist=10)
+    const result = findNearestValidLine(multiHunks, 20, "LEFT");
+    assert.equal(result.line, 12);
+    assert.equal(result.distance, 8);
   });
 });
 
@@ -403,7 +512,7 @@ describe("adjustComments", () => {
     assert.equal(bodyFindings.length, 1);
   });
 
-  it("moves comment to body for pure-deletion hunk (new_count=0)", () => {
+  it("moves comment to body for pure-deletion hunk (new_count=0) with RIGHT side", () => {
     const deletionHunkMap = [
       { path: "src/old.ts", status: "deleted", hunks: [{ new_start: 0, new_count: 0, old_start: 1, old_count: 3 }] },
     ];
@@ -413,6 +522,108 @@ describe("adjustComments", () => {
     const { validComments, bodyFindings } = adjustComments(payload, deletionHunkMap);
     assert.equal(validComments.length, 0);
     assert.equal(bodyFindings.length, 1);
+  });
+
+  it("keeps LEFT side comment on deleted file when line is in old range", () => {
+    const deletionHunkMap = [
+      { path: "src/old.ts", status: "deleted", hunks: [{ new_start: 0, new_count: 0, old_start: 1, old_count: 3 }] },
+    ];
+    const payload = {
+      comments: [{ path: "src/old.ts", line: 2, side: "LEFT", body: "deleted code issue" }],
+    };
+    const { validComments, bodyFindings, adjustedCount } = adjustComments(payload, deletionHunkMap);
+    assert.equal(validComments.length, 1);
+    assert.equal(bodyFindings.length, 0);
+    assert.equal(adjustedCount, 0);
+    assert.equal(validComments[0].line, 2);
+    assert.equal(validComments[0].side, "LEFT");
+  });
+
+  it("adjusts LEFT side comment on deleted file when line is close to old range", () => {
+    const deletionHunkMap = [
+      { path: "src/old.ts", status: "deleted", hunks: [{ new_start: 0, new_count: 0, old_start: 1, old_count: 3 }] },
+    ];
+    const payload = {
+      comments: [{ path: "src/old.ts", line: 5, side: "LEFT", body: "near issue" }],
+    };
+    // old range: 1..3, line 5 is 2 away from end (3), within MAX_LINE_DISTANCE
+    const { validComments, bodyFindings, adjustedCount } = adjustComments(payload, deletionHunkMap);
+    assert.equal(validComments.length, 1);
+    assert.equal(bodyFindings.length, 0);
+    assert.equal(adjustedCount, 1);
+    assert.equal(validComments[0].line, 3);
+  });
+
+  it("moves LEFT side comment to body on new file (old_count=0)", () => {
+    const newFileHunkMap = [
+      { path: "src/new.ts", status: "added", hunks: [{ new_start: 1, new_count: 100, old_start: 0, old_count: 0 }] },
+    ];
+    const payload = {
+      comments: [{ path: "src/new.ts", line: 1, side: "LEFT", body: "issue" }],
+    };
+    const { validComments, bodyFindings } = adjustComments(payload, newFileHunkMap);
+    assert.equal(validComments.length, 0);
+    assert.equal(bodyFindings.length, 1);
+  });
+
+  it("validates LEFT side comment against old range on modified file", () => {
+    const modHunkMap = [
+      { path: "src/mod.ts", status: "modified", hunks: [{ new_start: 10, new_count: 20, old_start: 10, old_count: 5 }] },
+    ];
+    // old range: 10..14, new range: 10..29
+    // Line 14 on LEFT: valid (inside old range)
+    const payload1 = {
+      comments: [{ path: "src/mod.ts", line: 14, side: "LEFT", body: "valid left" }],
+    };
+    const r1 = adjustComments(payload1, modHunkMap);
+    assert.equal(r1.validComments.length, 1);
+    assert.equal(r1.bodyFindings.length, 0);
+
+    // Line 20 on LEFT: outside old range (10..14), 6 away from 14 => body
+    const payload2 = {
+      comments: [{ path: "src/mod.ts", line: 20, side: "LEFT", body: "far left" }],
+    };
+    const r2 = adjustComments(payload2, modHunkMap);
+    assert.equal(r2.validComments.length, 0);
+    assert.equal(r2.bodyFindings.length, 1);
+
+    // Line 20 on RIGHT: valid (inside new range 10..29)
+    const payload3 = {
+      comments: [{ path: "src/mod.ts", line: 20, side: "RIGHT", body: "valid right" }],
+    };
+    const r3 = adjustComments(payload3, modHunkMap);
+    assert.equal(r3.validComments.length, 1);
+    assert.equal(r3.bodyFindings.length, 0);
+  });
+
+  it("defaults to RIGHT side when side is omitted", () => {
+    const payload = {
+      comments: [{ path: "src/foo.ts", line: 12, body: "no side" }],
+    };
+    const { validComments, bodyFindings } = adjustComments(payload, hunkMap);
+    assert.equal(validComments.length, 1);
+    assert.equal(bodyFindings.length, 0);
+  });
+
+  it("handles mixed LEFT and RIGHT comments in same payload", () => {
+    const mixedHunkMap = [
+      { path: "src/mod.ts", status: "modified", hunks: [{ new_start: 10, new_count: 5, old_start: 10, old_count: 3 }] },
+    ];
+    const payload = {
+      comments: [
+        { path: "src/mod.ts", line: 12, side: "RIGHT", body: "right valid" },   // new range 10..14 ✓
+        { path: "src/mod.ts", line: 12, side: "LEFT", body: "left valid" },     // old range 10..12 ✓
+        { path: "src/mod.ts", line: 14, side: "RIGHT", body: "right valid 2" }, // new range 10..14 ✓
+        { path: "src/mod.ts", line: 14, side: "LEFT", body: "left invalid" },   // old range 10..12, dist=2 → adjust to 12
+      ],
+    };
+    const { validComments, bodyFindings, adjustedCount } = adjustComments(payload, mixedHunkMap);
+    assert.equal(validComments.length, 4);
+    assert.equal(bodyFindings.length, 0);
+    assert.equal(adjustedCount, 1);
+    // The LEFT side comment at line 14 should be adjusted to 12
+    const adjusted = validComments.find(c => c.side === "LEFT" && c.body.includes("left invalid"));
+    assert.equal(adjusted.line, 12);
   });
 });
 
