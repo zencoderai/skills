@@ -2,7 +2,7 @@
 name: comprehensive-review
 description: "Comprehensive code review using parallel specialized subagents. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes. CRITICAL: this skill is costly, don't use it unless user explicitly requested to use it."
 metadata:
-  version: 2.0.0
+  version: 2.1.0
 ---
 
 # Comprehensive Code Review
