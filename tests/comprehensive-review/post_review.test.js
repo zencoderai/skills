@@ -10,9 +10,11 @@ const {
   adjustComments,
   formatBodyFindings,
   buildFallbackPayload,
+  parseApiError,
   is422LineError,
   isRecoverableError,
   extractHttpStatus,
+  LineResolutionError,
   postWithRetry,
   submitPendingReview,
   postAndSubmit,
@@ -683,18 +685,54 @@ describe("buildFallbackPayload", () => {
 });
 
 describe("is422LineError", () => {
-  it("detects 422 line resolution error", () => {
+  it("detects 422 line resolution error from stderr", () => {
     const err = { stderr: "HTTP 422: Line could not be resolved", status: 1 };
     assert.equal(is422LineError(err), true);
   });
 
-  it("detects pull_review_comment variant", () => {
-    const err = { stderr: "422 Validation Failed - pull_review_comment line", status: 1 };
+  it("detects 422 from JSON stdout with errors array", () => {
+    const err = {
+      stdout: JSON.stringify({
+        message: "Unprocessable Entity",
+        errors: ["Line could not be resolved"],
+        status: "422",
+      }),
+      stderr: "gh: Unprocessable Entity (HTTP 422)",
+    };
+    assert.equal(is422LineError(err), true);
+  });
+
+  it("detects 422 from JSON stdout with object errors array", () => {
+    const err = {
+      stdout: JSON.stringify({
+        message: "Unprocessable Entity",
+        errors: [{ message: "Line could not be resolved", resource: "PullRequestReviewComment" }],
+        status: "422",
+      }),
+      stderr: "gh: Unprocessable Entity (HTTP 422)",
+    };
+    assert.equal(is422LineError(err), true);
+  });
+
+  it("detects case-insensitive line could not be resolved", () => {
+    const err = { stderr: "HTTP 422: LINE COULD NOT BE RESOLVED", status: 1 };
     assert.equal(is422LineError(err), true);
   });
 
   it("does not match unrelated 422", () => {
     const err = { stderr: "HTTP 422: Resource not found", status: 1 };
+    assert.equal(is422LineError(err), false);
+  });
+
+  it("does not match unrelated 422 JSON error", () => {
+    const err = {
+      stdout: JSON.stringify({
+        message: "Validation Failed",
+        errors: ["Resource not accessible"],
+        status: "422",
+      }),
+      stderr: "gh: Unprocessable Entity (HTTP 422)",
+    };
     assert.equal(is422LineError(err), false);
   });
 
@@ -712,6 +750,18 @@ describe("is422LineError", () => {
     const err = { stderr: "HTTP 201: pull_review_comment line created", status: 1 };
     assert.equal(is422LineError(err), false);
   });
+
+  it("does not match JSON with non-422 status even if errors contain line resolution text", () => {
+    const err = {
+      stdout: JSON.stringify({
+        message: "Internal Server Error",
+        errors: ["Line could not be resolved"],
+        status: "500",
+      }),
+      stderr: "gh: Internal Server Error (HTTP 500)",
+    };
+    assert.equal(is422LineError(err), false);
+  });
 });
 
 describe("isRecoverableError", () => {
@@ -719,6 +769,13 @@ describe("isRecoverableError", () => {
     assert.equal(isRecoverableError({ stderr: "HTTP 500 Internal Server Error", status: 1 }), true);
     assert.equal(isRecoverableError({ stderr: "HTTP 502 Bad Gateway", status: 1 }), true);
     assert.equal(isRecoverableError({ stderr: "HTTP 503 Service Unavailable", status: 1 }), true);
+  });
+
+  it("treats 500+ from JSON stdout as recoverable", () => {
+    assert.equal(isRecoverableError({
+      stdout: JSON.stringify({ message: "Internal Server Error", status: "500" }),
+      stderr: "gh: Internal Server Error (HTTP 500)",
+    }), true);
   });
 
   it("treats network errors as recoverable", () => {
@@ -733,6 +790,12 @@ describe("isRecoverableError", () => {
     assert.equal(isRecoverableError({ stderr: "HTTP 422 validation", status: 1 }), false);
   });
 
+  it("does not treat 4xx JSON errors as recoverable", () => {
+    assert.equal(isRecoverableError({
+      stdout: JSON.stringify({ message: "Not Found", status: "404" }),
+    }), false);
+  });
+
   it("does not treat unknown errors as recoverable", () => {
     assert.equal(isRecoverableError({ stderr: "something broke" }), false);
   });
@@ -742,7 +805,176 @@ describe("isRecoverableError", () => {
   });
 });
 
+describe("parseApiError", () => {
+  it("joins message and errors into apiResponseMessage", () => {
+    const err = {
+      stdout: JSON.stringify({
+        message: "Unprocessable Entity",
+        errors: ["Line could not be resolved"],
+        documentation_url: "https://docs.github.com/rest/pulls/reviews",
+        status: "422",
+      }),
+      stderr: "gh: Unprocessable Entity (HTTP 422)",
+      message: "Command failed: gh api ...",
+    };
+    const result = parseApiError(err);
+    assert.equal(result.httpStatus, 422);
+    assert.equal(result.apiResponseMessage, "Unprocessable Entity: Line could not be resolved");
+    assert.equal(result.jsonBody.documentation_url, "https://docs.github.com/rest/pulls/reviews");
+  });
+
+  it("joins message and multiple errors", () => {
+    const err = {
+      stdout: JSON.stringify({
+        message: "Validation Failed",
+        errors: ["Line could not be resolved", "Path could not be resolved"],
+        status: "422",
+      }),
+    };
+    const result = parseApiError(err);
+    assert.equal(result.apiResponseMessage, "Validation Failed: Line could not be resolved: Path could not be resolved");
+  });
+
+  it("uses only message when errors array is empty", () => {
+    const err = { stdout: JSON.stringify({ message: "Not Found", errors: [], status: "404" }) };
+    const result = parseApiError(err);
+    assert.equal(result.httpStatus, 404);
+    assert.equal(result.apiResponseMessage, "Not Found");
+  });
+
+  it("uses only errors when message is absent", () => {
+    const err = { stdout: JSON.stringify({ errors: ["err1", "err2"], status: "400" }) };
+    const result = parseApiError(err);
+    assert.equal(result.apiResponseMessage, "err1: err2");
+  });
+
+  it("extracts .message from object errors", () => {
+    const err = {
+      stdout: JSON.stringify({
+        message: "Validation Failed",
+        errors: [{ message: "Line could not be resolved", resource: "PullRequestReviewComment" }],
+        status: "422",
+      }),
+    };
+    const result = parseApiError(err);
+    assert.equal(result.apiResponseMessage, "Validation Failed: Line could not be resolved");
+  });
+
+  it("skips object errors without message field", () => {
+    const err = {
+      stdout: JSON.stringify({
+        message: "Validation Failed",
+        errors: [{ resource: "PullRequestReviewComment" }],
+        status: "422",
+      }),
+    };
+    const result = parseApiError(err);
+    assert.equal(result.apiResponseMessage, "Validation Failed");
+  });
+
+  it("parses JSON stdout with numeric status field", () => {
+    const err = { stdout: JSON.stringify({ message: "Not Found", status: 404 }) };
+    const result = parseApiError(err);
+    assert.equal(result.httpStatus, 404);
+    assert.equal(result.apiResponseMessage, "Not Found");
+  });
+
+  it("falls back to stderr regex when stdout is not JSON", () => {
+    const err = { stderr: "gh: HTTP 500 Internal Server Error", stdout: "not json" };
+    const result = parseApiError(err);
+    assert.equal(result.httpStatus, 500);
+    assert.equal(result.jsonBody, null);
+    assert.ok(result.apiResponseMessage.includes("stdout: not json"));
+    assert.ok(result.apiResponseMessage.includes("stderr: gh: HTTP 500"));
+  });
+
+  it("falls back to message regex when stderr has no HTTP status", () => {
+    const err = { message: "HTTP 403 Forbidden", stderr: "some error" };
+    const result = parseApiError(err);
+    assert.equal(result.httpStatus, 403);
+  });
+
+  it("builds fallback message from all fields when no JSON", () => {
+    const err = { message: "cmd failed", stdout: "raw output", stderr: "raw error" };
+    const result = parseApiError(err);
+    assert.ok(result.apiResponseMessage.includes("message: cmd failed"));
+    assert.ok(result.apiResponseMessage.includes("stdout: raw output"));
+    assert.ok(result.apiResponseMessage.includes("stderr: raw error"));
+  });
+
+  it("returns unknown error when all fields are empty", () => {
+    const result = parseApiError({});
+    assert.equal(result.httpStatus, null);
+    assert.equal(result.apiResponseMessage, "unknown error");
+    assert.equal(result.jsonBody, null);
+  });
+
+  it("handles JSON stdout with missing status field", () => {
+    const err = {
+      stdout: JSON.stringify({ message: "Something", errors: ["err1"] }),
+      stderr: "gh: HTTP 422 Unprocessable",
+    };
+    const result = parseApiError(err);
+    // status comes from stderr fallback since JSON has no status
+    assert.equal(result.httpStatus, 422);
+    // apiResponseMessage falls back because jsonBody.status was missing
+    assert.ok(result.apiResponseMessage.includes("stderr:"));
+  });
+
+  it("handles JSON stdout with non-array errors field", () => {
+    const err = {
+      stdout: JSON.stringify({ message: "Bad", errors: "not an array", status: "400" }),
+    };
+    const result = parseApiError(err);
+    assert.equal(result.httpStatus, 400);
+    assert.equal(result.apiResponseMessage, "Bad");
+  });
+
+  it("handles JSON stdout with status 0 (falsy but present)", () => {
+    const err = {
+      stdout: JSON.stringify({ message: "OK", status: "0" }),
+    };
+    const result = parseApiError(err);
+    assert.equal(result.httpStatus, 0);
+    assert.equal(result.apiResponseMessage, "OK");
+  });
+
+  it("prefers JSON status over stderr regex status", () => {
+    const err = {
+      stdout: JSON.stringify({ message: "Unprocessable Entity", status: "422" }),
+      stderr: "gh: HTTP 500 Internal Server Error",
+    };
+    const result = parseApiError(err);
+    assert.equal(result.httpStatus, 422);
+  });
+
+  it("handles JSON stdout where status is non-numeric string", () => {
+    const err = {
+      stdout: JSON.stringify({ message: "Weird", status: "not-a-number" }),
+      stderr: "gh: HTTP 503 Service Unavailable",
+    };
+    const result = parseApiError(err);
+    // Non-numeric status in JSON → falls back to stderr regex
+    assert.equal(result.httpStatus, 503);
+  });
+
+  it("handles JSON with no message and no errors (empty response with status)", () => {
+    const err = { stdout: JSON.stringify({ status: "500" }) };
+    const result = parseApiError(err);
+    assert.equal(result.httpStatus, 500);
+    // No message or errors → falls back to building from raw fields
+    assert.ok(result.apiResponseMessage.includes("stdout:"));
+  });
+});
+
 describe("extractHttpStatus", () => {
+  it("extracts status from JSON stdout", () => {
+    assert.equal(extractHttpStatus({
+      stdout: JSON.stringify({ message: "Unprocessable Entity", status: "422" }),
+      stderr: "gh: Unprocessable Entity (HTTP 422)",
+    }), 422);
+  });
+
   it("extracts status from stderr with HTTP prefix", () => {
     assert.equal(extractHttpStatus({ stderr: "gh: HTTP 422 (https://api.github.com/...)" }), 422);
   });
@@ -755,6 +987,13 @@ describe("extractHttpStatus", () => {
     assert.equal(extractHttpStatus({ message: "HTTP 403 Forbidden" }), 403);
   });
 
+  it("prefers JSON stdout status over stderr regex", () => {
+    assert.equal(extractHttpStatus({
+      stdout: JSON.stringify({ status: "422" }),
+      stderr: "HTTP 500 Internal Server Error",
+    }), 422);
+  });
+
   it("returns null when no HTTP status found", () => {
     assert.equal(extractHttpStatus({ stderr: "some random error" }), null);
   });
@@ -765,11 +1004,10 @@ describe("extractHttpStatus", () => {
 });
 
 describe("postWithRetry", () => {
-  it("returns success on first attempt", () => {
+  it("returns response on first attempt", () => {
     const apiFn = () => '{"id":1,"state":"SUBMITTED"}';
     const result = postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, noop);
-    assert.equal(result.success, true);
-    assert.equal(result.response, '{"id":1,"state":"SUBMITTED"}');
+    assert.equal(result, '{"id":1,"state":"SUBMITTED"}');
   });
 
   it("retries on recoverable error and succeeds on third attempt", () => {
@@ -784,11 +1022,11 @@ describe("postWithRetry", () => {
       return '{"id":1}';
     };
     const result = postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, noop);
-    assert.equal(result.success, true);
+    assert.equal(result, '{"id":1}');
     assert.equal(calls, 3);
   });
 
-  it("returns is422Line:true on first attempt without retrying", () => {
+  it("throws LineResolutionError on 422 line error without retrying", () => {
     let calls = 0;
     const apiFn = () => {
       calls++;
@@ -796,13 +1034,14 @@ describe("postWithRetry", () => {
       err.stderr = "HTTP 422: Line could not be resolved";
       throw err;
     };
-    const result = postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, noop);
-    assert.equal(result.success, false);
-    assert.equal(result.is422Line, true);
+    assert.throws(
+      () => postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, noop),
+      (err) => err instanceof LineResolutionError
+    );
     assert.equal(calls, 1);
   });
 
-  it("returns failure immediately on non-recoverable error without retrying", () => {
+  it("throws immediately on non-recoverable error without retrying", () => {
     let calls = 0;
     const apiFn = () => {
       calls++;
@@ -810,13 +1049,14 @@ describe("postWithRetry", () => {
       err.stderr = "HTTP 401 Unauthorized";
       throw err;
     };
-    const result = postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, noop);
-    assert.equal(result.success, false);
-    assert.equal(result.is422Line, false);
+    assert.throws(
+      () => postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, noop),
+      /HTTP 401 Unauthorized/
+    );
     assert.equal(calls, 1);
   });
 
-  it("exhausts all retries on persistent recoverable errors", () => {
+  it("exhausts all retries on persistent recoverable errors and throws", () => {
     let calls = 0;
     const apiFn = () => {
       calls++;
@@ -824,9 +1064,10 @@ describe("postWithRetry", () => {
       err.stderr = "HTTP 503 Service Unavailable";
       throw err;
     };
-    const result = postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, noop);
-    assert.equal(result.success, false);
-    assert.equal(result.is422Line, false);
+    assert.throws(
+      () => postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, noop),
+      /HTTP 503/
+    );
     assert.equal(calls, 5);
   });
 
@@ -838,7 +1079,9 @@ describe("postWithRetry", () => {
       throw err;
     };
     const sleepFn = () => { sleepCalls++; };
-    postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, sleepFn);
+    assert.throws(
+      () => postWithRetry("repos/owner/repo/pulls/1/reviews", "/fake/path.json", apiFn, sleepFn)
+    );
     assert.equal(sleepCalls, 4);
   });
 });

@@ -236,7 +236,7 @@ Construct a JSON object with this structure:
 
 For each finding marked "Post comment":
 - `path`: the file path relative to repo root
-- `line`: the line number in the NEW version of the file
+- `line`: the line number on the side indicated by `side` — for `RIGHT`, the line in the new version; for `LEFT`, the line in the old version
 - `side`: `RIGHT` for new/modified code, `LEFT` for deleted code
 - `body`: include priority, title, review type with model name, description, and suggested fix
 - Each finding gets its own comment — do NOT merge multiple findings into one comment
