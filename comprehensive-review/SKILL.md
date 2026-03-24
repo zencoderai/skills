@@ -9,6 +9,10 @@ metadata:
 
 Run parallel specialized code reviews via subagents, covering architecture, security, performance, code quality, requirements compliance, and bugs. Merge findings and let the user act on them. Works with both GitHub PRs and local branch diffs.
 
+## Variables
+
+- `{TEMP_DIR}` — the OS temporary directory (e.g. `/tmp` on Unix, `%TEMP%` on Windows). Use it for all intermediate files.
+
 ## Workflow
 
 ### Step 1: Determine review mode
@@ -38,7 +42,7 @@ IMPORTANT: Do NOT invoke the Skill tool. All instructions you need are in the fi
 Use a subagent tool to spawn the subagent. Use a powerful model since this involves complex reasoning to assess complexity.
 
 The subagent will return:
-- **Diff file path**: absolute path to the saved diff file (must start with `/`, e.g. `/tmp/review-diff-feature.patch`)
+- **Diff file path**: absolute path to the saved diff file (must start with `/`, e.g. `{TEMP_DIR}/review-diff-feature.patch`)
 - **Diff line count**: total number of lines in the diff file
 - **Title**: the PR title or summary from commits
 - **Description**: comprehensive task description with all requirements
@@ -243,12 +247,12 @@ For each finding marked "Post comment":
 
 If user added custom notes to a finding, update description and/or suggested fix according to these notes.
 
-Save the JSON to a file named `/tmp/review_payload-<branch-name>.json`.
+Save the JSON to a file named `{TEMP_DIR}/review_payload-<branch-name>.json`.
 
 #### 7b. Post via the script
 
 ```bash
-node <SKILL_DIRECTORY>/scripts/post_review.js <OWNER>/<REPO> <PR_NUMBER> <diff-file-path> /tmp/review_payload-<branch-name>.json
+node <SKILL_DIRECTORY>/scripts/post_review.js <OWNER>/<REPO> <PR_NUMBER> <diff-file-path> {TEMP_DIR}/review_payload-<branch-name>.json
 ```
 
 The script validates comment line numbers against the diff. It logs progress and any errors (even if they were recoverable). It outputs in the end whether the review was posted successfully.
