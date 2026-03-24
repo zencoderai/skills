@@ -12,7 +12,16 @@ const MAX_LINE_DISTANCE = 5;
 const MAX_RETRIES = 5;
 const INITIAL_BACKOFF_MS = 1000;
 
-const REDACT_PATTERNS = [/Bearer\s+\S+/gi, /token\s+\S+/gi, /ghp_\S+/gi, /Authorization:[^\n]*/gi];
+const REDACT_PATTERNS = [
+  /Bearer\s+\S+/gi,
+  /token\s+\S+/gi,
+  /ghp_[A-Za-z0-9_]+/g,
+  /gho_[A-Za-z0-9_]+/g,
+  /ghs_[A-Za-z0-9_]+/g,
+  /ghr_[A-Za-z0-9_]+/g,
+  /github_pat_[A-Za-z0-9_]+/g,
+  /Authorization:[^\n]*/gi,
+];
 
 function redact(text) {
   return REDACT_PATTERNS.reduce((s, re) => s.replace(re, "[REDACTED]"), text);
@@ -38,7 +47,6 @@ function parseUnifiedDiff(diffText) {
   let currentNewPath = "";
   let currentFileKey = "";
   let currentHunks = [];
-  let currentHunk = null;
 
   function flush() {
     if (!currentFileKey) return;
@@ -53,7 +61,6 @@ function parseUnifiedDiff(diffText) {
     currentNewPath = "";
     currentFileKey = "";
     currentHunks = [];
-    currentHunk = null;
   }
 
   for (const rawLine of diffText.split("\n")) {
@@ -61,10 +68,10 @@ function parseUnifiedDiff(diffText) {
 
     if (line.startsWith("diff --git ")) {
       flush();
-      const parts = line.split(" ");
-      if (parts.length >= 4) {
-        currentOldPath = stripDiffPath(parts[2]);
-        currentNewPath = stripDiffPath(parts[3]);
+      const gitDiffMatch = line.match(/^diff --git (a\/.+) (b\/.+)$/);
+      if (gitDiffMatch) {
+        currentOldPath = stripDiffPath(gitDiffMatch[1]);
+        currentNewPath = stripDiffPath(gitDiffMatch[2]);
         currentFileKey = currentNewPath;
       } else {
         currentOldPath = "";
@@ -72,7 +79,6 @@ function parseUnifiedDiff(diffText) {
         currentFileKey = "";
       }
       currentHunks = [];
-      currentHunk = null;
       continue;
     }
 
@@ -89,13 +95,12 @@ function parseUnifiedDiff(diffText) {
 
     const match = line.match(HUNK_HEADER_RE);
     if (match) {
-      currentHunk = {
+      currentHunks.push({
         old_start: parseInt(match[1], 10),
         old_count: parseInt(match[2] ?? "1", 10),
         new_start: parseInt(match[3], 10),
         new_count: parseInt(match[4] ?? "1", 10),
-      };
-      currentHunks.push(currentHunk);
+      });
       continue;
     }
   }
@@ -117,11 +122,10 @@ function findNearestValidLine(hunks, line, side) {
 
   for (const hunk of hunks) {
     const count = side === "LEFT" ? hunk.old_count : hunk.new_count;
-    const start = side === "LEFT" ? hunk.old_start : hunk.new_start;
+    const hunkStart = side === "LEFT" ? hunk.old_start : hunk.new_start;
     if (count === 0) continue;
 
-    const hunkStart = start;
-    const hunkEnd = start + count - 1;
+    const hunkEnd = hunkStart + count - 1;
 
     if (isLineInHunk(hunk, line, side)) {
       return { line, distance: 0 };
@@ -167,24 +171,25 @@ function adjustComments(payload, hunkMap) {
     }
 
     const side = comment.side || "RIGHT";
-    const nearest = findNearestValidLine(fileEntry.hunks, comment.line, side);
+    const normalizedComment = { ...comment, side };
+    const nearest = findNearestValidLine(fileEntry.hunks, normalizedComment.line, side);
 
     if (!nearest) {
-      bodyFindings.push(comment);
+      bodyFindings.push(normalizedComment);
       continue;
     }
 
     if (nearest.distance === 0) {
-      validComments.push(comment);
+      validComments.push(normalizedComment);
     } else if (nearest.distance <= MAX_LINE_DISTANCE) {
       adjustedCount++;
       validComments.push({
-        ...comment,
+        ...normalizedComment,
         line: nearest.line,
-        body: `> _Original location: line ${comment.line} (adjusted to nearest diff line)_\n\n${comment.body}`,
+        body: `> _Original location: line ${normalizedComment.line} (adjusted to nearest diff line)_\n\n${normalizedComment.body}`,
       });
     } else {
-      bodyFindings.push(comment);
+      bodyFindings.push(normalizedComment);
     }
   }
 
@@ -501,6 +506,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  redact,
   parseUnifiedDiff,
   isLineInHunk,
   findNearestValidLine,

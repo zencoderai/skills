@@ -251,4 +251,4 @@ Save the JSON to a file named `/tmp/review_payload-<branch-name>.json`.
 node <SKILL_DIRECTORY>/scripts/post_review.js <OWNER>/<REPO> <PR_NUMBER> <diff-file-path> /tmp/review_payload-<branch-name>.json
 ```
 
-The script validates comment line numbers against the diff and adjusts them if required. It logs progress and any errors (even if they were recoverable). It outputs in the end whether the review was posted successfully.
+The script validates comment line numbers against the diff. If a comment is within 5 lines of a valid hunk on the requested side, it is adjusted to the nearest diff line; otherwise it is moved into the review body under "Findings outside diff range." It logs progress and any errors (even if they were recoverable). It outputs in the end whether the review was posted successfully.

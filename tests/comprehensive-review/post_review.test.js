@@ -4,6 +4,7 @@ const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  redact,
   parseUnifiedDiff,
   isLineInHunk,
   findNearestValidLine,
@@ -81,6 +82,40 @@ const DELETED_FILE_DIFF = [
   "-line two",
   "-line three",
 ].join("\n");
+
+describe("redact", () => {
+  it("redacts Bearer tokens", () => {
+    assert.equal(redact("Bearer ghp_abc123xyz"), "[REDACTED]");
+  });
+
+  it("redacts ghp_ PATs", () => {
+    assert.equal(redact("using ghp_abc123xyz for auth"), "using [REDACTED] for auth");
+  });
+
+  it("redacts gho_ OAuth tokens", () => {
+    assert.equal(redact("found gho_OAuthToken123"), "found [REDACTED]");
+  });
+
+  it("redacts ghs_ App installation tokens", () => {
+    assert.equal(redact("found ghs_InstallToken456"), "found [REDACTED]");
+  });
+
+  it("redacts ghr_ refresh tokens", () => {
+    assert.equal(redact("refresh ghr_RefreshToken789"), "refresh [REDACTED]");
+  });
+
+  it("redacts github_pat_ fine-grained PATs", () => {
+    assert.equal(redact("pat github_pat_FineGrained123"), "pat [REDACTED]");
+  });
+
+  it("redacts Authorization headers", () => {
+    assert.equal(redact("Authorization: token abc"), "[REDACTED]");
+  });
+
+  it("leaves clean text unchanged", () => {
+    assert.equal(redact("normal log message"), "normal log message");
+  });
+});
 
 describe("parseUnifiedDiff", () => {
   it("parses a simple diff with added, removed, and context lines", () => {
@@ -598,13 +633,14 @@ describe("adjustComments", () => {
     assert.equal(r3.bodyFindings.length, 0);
   });
 
-  it("defaults to RIGHT side when side is omitted", () => {
+  it("defaults to RIGHT side when side is omitted and normalizes it into the payload", () => {
     const payload = {
       comments: [{ path: "src/foo.ts", line: 12, body: "no side" }],
     };
     const { validComments, bodyFindings } = adjustComments(payload, hunkMap);
     assert.equal(validComments.length, 1);
     assert.equal(bodyFindings.length, 0);
+    assert.equal(validComments[0].side, "RIGHT");
   });
 
   it("handles mixed LEFT and RIGHT comments in same payload", () => {
