@@ -158,15 +158,16 @@ Output this format:
 
 ### Findings
 
-| # | Bug | Type | Location |
-|---|-----|------|----------|
-| 1 | Description | Logic Error | link to specific line in file |
-| 2 | Description | Edge Case | link to specific line in file |
+| # | Bug | Type | Location | Diff line |
+|---|-----|------|----------|-----------|
+| 1 | Description | Logic Error | link to specific line in file | 42 |
+| 2 | Description | Edge Case | link to specific line in file | 55 |
 
 ### Details
 
 #### 1. Issue title
 **File:** link to specific line in file
+**Diff line:** 42
 **Type:** [Logic Error | Edge Case | State Management | Data Handling | API Contract | Concurrency]
 
 **Description:**
@@ -215,3 +216,4 @@ test that would catch this bug
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
 - Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
 - Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding even if they are related.
+- Each finding must include a **Diff line** number for PR commenting. This must be a line number within a `+`-side diff hunk range (from `@@ ... +new_start,new_count @@`, valid range is `new_start` to `new_start + new_count - 1`). If the issue line is not in any hunk, use the nearest hunk boundary line and add link to file to the finding description.

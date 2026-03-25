@@ -116,15 +116,16 @@ Output this format:
 
 ### Findings
 
-| # | Issue | Location |
-|---|-------|----------|
-| 1 | Description | link to specific line in file |
-| 2 | Description | link to specific line in file |
+| # | Issue | Location | Diff line |
+|---|-------|----------|-----------|
+| 1 | Description | link to specific line in file | 42 |
+| 2 | Description | link to specific line in file | 55 |
 
 ### Details
 
 #### 1. Issue title
 **Location:** link to specific line in file
+**Diff line:** 42
 
 Description of the architectural issue and its systemic impact.
 
@@ -153,3 +154,4 @@ code or structural suggestion
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
 - Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
 - Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding.
+- Each finding must include a **Diff line** number for PR commenting. This must be a line number within a `+`-side diff hunk range (from `@@ ... +new_start,new_count @@`, valid range is `new_start` to `new_start + new_count - 1`). If the issue line is not in any hunk, use the nearest hunk boundary line and add link to file to the finding description.

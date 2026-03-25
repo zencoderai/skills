@@ -141,7 +141,7 @@ Subagents return findings as flat lists without priority or severity labels. The
 1. Collect all findings from each review (self-review or subagent responses).
 2. Group findings by file and line number.
 3. Merge issues that describe the same problem (same file, similar line range, same category). When merging, combine their review types. For **hard** PRs, findings from different models on the same criterion that agree strengthen confidence; findings from only one model should be noted as lower confidence.
-4. Keep the best description and suggested fix from among duplicates.
+4. Keep the best description, suggested fix, and **Diff line** from among duplicates. Track Diff line values internally for use in Step 7 but do NOT include them in the output shown to the user.
 
 #### 4b. Filter false positives
 
@@ -240,7 +240,7 @@ Construct a JSON object with this structure:
 
 For each finding marked "Post comment":
 - `path`: the file path relative to repo root
-- `line`: the line number on the side indicated by `side` — for `RIGHT`, the line in the new version; for `LEFT`, the line in the old version
+- `line`: the `Diff line` value from the findings table. Use the value provided by the review subagents directly — do NOT re-derive or manually verify it
 - `side`: `RIGHT` for new/modified code, `LEFT` for deleted code
 - `body`: include priority, title, review type with model name, description, and suggested fix
 - Each finding gets its own comment — do NOT merge multiple findings into one comment
@@ -255,4 +255,4 @@ Save the JSON to a file named `{TEMP_DIR}/review_payload-<branch-name>.json`.
 node <SKILL_DIRECTORY>/scripts/post_review.js <OWNER>/<REPO> <PR_NUMBER> <diff-file-path> {TEMP_DIR}/review_payload-<branch-name>.json
 ```
 
-The script validates comment line numbers against the diff. It logs progress and any errors (even if they were recoverable). It outputs in the end whether the review was posted successfully.
+The script validates comment line numbers against the diff, adjusts them to the nearest valid diff line when close, and moves out-of-range comments to the review body. You don't need to validate line numbers manually. The script logs progress and any errors (even if they were recoverable). It outputs in the end whether the review was posted successfully.
