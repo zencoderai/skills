@@ -2,12 +2,16 @@
 name: comprehensive-review
 description: "Comprehensive code review using parallel specialized subagents. If a PR URL is provided, fetches PR details and can post comments. If no PR is provided, reviews the diff between the current branch and its base branch plus any uncommitted changes. CRITICAL: this skill is costly, don't use it unless user explicitly requested to use it."
 metadata:
-  version: 2.0.0
+  version: 2.1.0
 ---
 
 # Comprehensive Code Review
 
 Run parallel specialized code reviews via subagents, covering architecture, security, performance, code quality, requirements compliance, and bugs. Merge findings and let the user act on them. Works with both GitHub PRs and local branch diffs.
+
+## Variables
+
+- `{TEMP_DIR}` — the OS temporary directory (e.g. `/tmp` on Unix, `%TEMP%` on Windows). Use it for all intermediate files.
 
 ## Workflow
 
@@ -38,7 +42,7 @@ IMPORTANT: Do NOT invoke the Skill tool. All instructions you need are in the fi
 Use a subagent tool to spawn the subagent. Use a powerful model since this involves complex reasoning to assess complexity.
 
 The subagent will return:
-- **Diff file path**: absolute path to the saved diff file (must start with `/`, e.g. `/tmp/review-diff-feature.patch`)
+- **Diff file path**: absolute path to the saved diff file (must start with `/`, e.g. `{TEMP_DIR}/review-diff-feature.patch`)
 - **Diff line count**: total number of lines in the diff file
 - **Title**: the PR title or summary from commits
 - **Description**: comprehensive task description with all requirements
@@ -137,7 +141,7 @@ Subagents return findings as flat lists without priority or severity labels. The
 1. Collect all findings from each review (self-review or subagent responses).
 2. Group findings by file and line number.
 3. Merge issues that describe the same problem (same file, similar line range, same category). When merging, combine their review types. For **hard** PRs, findings from different models on the same criterion that agree strengthen confidence; findings from only one model should be noted as lower confidence.
-4. Keep the best description and suggested fix from among duplicates.
+4. Keep the best description, suggested fix, and **Diff line** from among duplicates. Track Diff line values internally for use in Step 7 but do NOT include them in the output shown to the user.
 
 #### 4b. Filter false positives
 
@@ -213,35 +217,42 @@ For each finding the user chose "Fix":
 
 **Skip this step entirely if no findings were marked "Post comment".**
 
-Only applies in PR mode. Call a subagent to post line-specific comments via the GitHub Reviews API.
+Only applies in PR mode. Post line-specific comments via the `post_review.js` script.
 
-**CRITICAL**: You MUST spawn a subagent for this step. Do NOT perform the comment posting yourself. Do NOT read the file `<SKILL_DIRECTORY>/post-comments.md` yourself. The subagent must read it and follow its instructions.
+#### 7a. Build the review payload JSON
 
-Construct the subagent prompt as follows:
+Construct a JSON object with this structure:
 
+```json
+{
+  "event": "COMMENT",
+  "body": "## Comprehensive Code Review\n\n### Findings Summary\n\n| Priority | Issue | Location | Review type |\n|----------|-------|----------|------------|\n| P0 | Issue title | `path/to/file.ts:42` | code-quality(gpt-5-3-codex) |\n\n### Recommendation\n[Concise recommendation]",
+  "comments": [
+    {
+      "path": "path/to/file.ts",
+      "line": 42,
+      "side": "RIGHT",
+      "body": "**[P0] Issue Title** (review type: code-quality(gpt-5-3-codex))\n\nDescription.\n\n**Suggested fix:**\n```\ncode\n```"
+    }
+  ]
+}
 ```
-Read the file `<SKILL_DIRECTORY>/post-comments.md` for detailed instructions, then follow them.
 
-Owner: <OWNER>
-Repo: <REPO>
-PR Number: <PR_NUMBER>
-Diff file path: <absolute path to diff file>
-
-Findings to post:
-
-<For each finding marked "Post comment", include:>
-### Finding <#>
-- **Priority**: <priority>
-- **Title**: <issue title>
-- **File**: <file path>
-- **Line**: <line number>
-- **Review type**: <review type with model names>
-- **Description**: <description>
-- **Suggested fix**: <suggested fix or "None">
-
-IMPORTANT: Do NOT invoke the Skill tool. All instructions you need are in the file specified above.
-```
+For each finding marked "Post comment":
+- `path`: the file path relative to repo root
+- `line`: the line number for the comment. For `RIGHT` side, this is the new-file line number (from `+new_start,new_count` hunk range). For `LEFT` side, this is the old-file line number (from `-old_start,old_count` hunk range). Use the `Diff line` value from the findings table when the finding targets new/modified code. For findings targeting deleted code, use the old-file line number from the `-`-side of the diff hunk
+- `side`: `RIGHT` for new/modified code, `LEFT` for deleted code. Use `LEFT` only when commenting on lines that were removed (shown with `-` prefix in the diff)
+- `body`: include priority, title, review type with model name, description, and suggested fix
+- Each finding gets its own comment — do NOT merge multiple findings into one comment
 
 If user added custom notes to a finding, update description and/or suggested fix according to these notes.
 
-Use a subagent tool to spawn the subagent. Use a cheap/fast model since this is a data-posting task that doesn't require deep reasoning.
+Save the JSON to a file named `{TEMP_DIR}/review_payload-<branch-name>.json`.
+
+#### 7b. Post via the script
+
+```bash
+node <SKILL_DIRECTORY>/scripts/post_review.js <OWNER>/<REPO> <PR_NUMBER> <diff-file-path> {TEMP_DIR}/review_payload-<branch-name>.json
+```
+
+The script validates comment line numbers against the diff, adjusts them to the nearest valid diff line when close, and moves out-of-range comments to the review body. You don't need to validate line numbers manually. The script logs progress and any errors (even if they were recoverable). It outputs in the end whether the review was posted successfully.

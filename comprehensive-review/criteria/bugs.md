@@ -158,15 +158,17 @@ Output this format:
 
 ### Findings
 
-| # | Bug | Type | Location |
-|---|-----|------|----------|
-| 1 | Description | Logic Error | link to specific line in file |
-| 2 | Description | Edge Case | link to specific line in file |
+| # | Bug | Type | Location | Diff line | Side |
+|---|-----|------|----------|-----------|------|
+| 1 | Description | Logic Error | link to specific line in file | 42 | RIGHT |
+| 2 | Description | Edge Case | link to specific line in file | 55 | LEFT |
 
 ### Details
 
 #### 1. Issue title
 **File:** link to specific line in file
+**Diff line:** 42
+**Side:** RIGHT
 **Type:** [Logic Error | Edge Case | State Management | Data Handling | API Contract | Concurrency]
 
 **Description:**
@@ -215,3 +217,4 @@ test that would catch this bug
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
 - Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
 - Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding even if they are related.
+- Each finding must include a **Diff line** number for PR commenting and a **Side** (`RIGHT` or `LEFT`). For new or modified code (lines with `+` prefix in the diff), use `Side: RIGHT` and a line number within the `+`-side hunk range (`new_start` to `new_start + new_count - 1`). For deleted code (lines with `-` prefix in the diff), use `Side: LEFT` and a line number within the `-`-side hunk range (`old_start` to `old_start + old_count - 1`). If the issue line is not in any hunk, use the nearest hunk boundary line and add link to file to the finding description.

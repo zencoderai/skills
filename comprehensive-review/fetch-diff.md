@@ -2,6 +2,10 @@
 
 Gather change details, save the diff to a file, and return structured information about the change. The task description must only be derived from: PR description, PR comments, commit messages, and committed `.md` files. Never infer the description from code changes.
 
+## Variables
+
+- `{TEMP_DIR}` — the OS temporary directory (e.g. `/tmp` on Unix, `%TEMP%` on Windows). Use it for all intermediate files.
+
 ## Inputs
 
 You will receive:
@@ -52,7 +56,7 @@ You will receive:
 
 4. Save the diff:
    ```bash
-   gh pr diff <PR_NUMBER> --repo <OWNER>/<REPO> > /tmp/review-diff-<branch-name>.patch
+   gh pr diff <PR_NUMBER> --repo <OWNER>/<REPO> > {TEMP_DIR}/review-diff-<branch-name>.patch
    ```
 
 #### Local mode
@@ -67,9 +71,9 @@ You will receive:
 2. Generate a combined diff:
    ```bash
    MERGE_BASE=$(git merge-base HEAD origin/<BASE_BRANCH>)
-   git diff $MERGE_BASE HEAD > /tmp/review-diff-committed-<branch-name>.patch
-   git diff > /tmp/review-diff-uncommitted-<branch-name>.patch
-   cat /tmp/review-diff-committed-<branch-name>.patch /tmp/review-diff-uncommitted-<branch-name>.patch > /tmp/review-diff-<branch-name>.patch
+   git diff $MERGE_BASE HEAD > {TEMP_DIR}/review-diff-committed-<branch-name>.patch
+   git diff > {TEMP_DIR}/review-diff-uncommitted-<branch-name>.patch
+   cat {TEMP_DIR}/review-diff-committed-<branch-name>.patch {TEMP_DIR}/review-diff-uncommitted-<branch-name>.patch > {TEMP_DIR}/review-diff-<branch-name>.patch
    ```
 
 3. Gather task description from commit messages on the branch (do not infer from code):
@@ -105,7 +109,7 @@ Increase complexity one level if any of the following apply, or two levels if mu
 
 Return the following structured information:
 
-1. **Diff file path**: The absolute path to the saved diff file (e.g., `/tmp/review-diff-<branch-name>.patch`). MUST be an absolute path starting with `/`.
+1. **Diff file path**: The absolute path to the saved diff file (e.g., `{TEMP_DIR}/review-diff-<branch-name>.patch`). MUST be an absolute path starting with `/`.
 2. **Diff line count**: The total number of lines in the diff file. After saving the diff, run `wc -l < <diff-file-path>` to get this count.
 3. **Title**: The PR title (PR mode) or a summary derived from commit messages (local mode)
 4. **Description**: A comprehensive task description derived only from the PR description, PR comments, commit messages, and committed `.md` files. Never infer or supplement the description from the code diff. This should be thorough enough for reviewers to understand the full intent of the change.
@@ -123,7 +127,7 @@ Format your response exactly as:
 <simple|medium|hard>
 
 ### Diff
-<absolute path to the diff file, e.g. /tmp/review-diff-feature.patch>
+<absolute path to the diff file, e.g. {TEMP_DIR}/review-diff-feature.patch>
 
 ### Diff Line Count
 <total number of lines in the diff file>

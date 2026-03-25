@@ -133,18 +133,17 @@ Output this format:
 
 ### Findings
 
-| # | Vulnerability | CWE | Location |
-|---|--------------|-----|----------|
-| 1 | Description | CWE-XXX | link to specific line in file |
-| 2 | Description | CWE-XXX | link to specific line in file |
+| # | Vulnerability | Location | Diff line | Side |
+|---|--------------|----------|-----------|------|
+| 1 | Description | link to specific line in file | 42 | RIGHT |
+| 2 | Description | link to specific line in file | 55 | LEFT |
 
 ### Details
 
 #### 1. Vulnerability title
 **File:** link to specific line in file
-**CWE:** [CWE-XXX](https://cwe.mitre.org/data/definitions/XXX.html)
-**CVSS Estimate:** [Score if applicable]
-
+**Diff line:** 42
+**Side:** RIGHT
 **Description:**
 What the vulnerability is and why it's exploitable.
 
@@ -173,10 +172,10 @@ corrected code with proper security controls
 ```
 
 **Rules:**
-- Include CWE references for all findings when applicable.
 - Provide concrete exploit scenarios to justify significance.
 - Include secure code fixes for significant findings.
 - Consider both immediate exploitability and chained attack potential.
 - Do NOT assign priority or severity labels (P0/P1/P2/P3, critical/major/minor, etc.).
 - Do NOT include a verdict (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION) — just report findings.
 - Each finding must be a standalone, line-anchored entry with explicit file, line, category, and description. Do NOT bundle multiple distinct issues into a single finding.
+- Each finding must include a **Diff line** number for PR commenting and a **Side** (`RIGHT` or `LEFT`). For new or modified code (lines with `+` prefix in the diff), use `Side: RIGHT` and a line number within the `+`-side hunk range (`new_start` to `new_start + new_count - 1`). For deleted code (lines with `-` prefix in the diff), use `Side: LEFT` and a line number within the `-`-side hunk range (`old_start` to `old_start + old_count - 1`). If the issue line is not in any hunk, use the nearest hunk boundary line and add link to file to the finding description.
