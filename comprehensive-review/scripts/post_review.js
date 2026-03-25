@@ -19,6 +19,7 @@ const REDACT_PATTERNS = [
   /gho_[A-Za-z0-9_]+/g,
   /ghs_[A-Za-z0-9_]+/g,
   /ghr_[A-Za-z0-9_]+/g,
+  /ghu_[A-Za-z0-9_]+/g,
   /github_pat_[A-Za-z0-9_]+/g,
   /Authorization:[^\n]*/gi,
 ];
@@ -284,7 +285,7 @@ function extractHttpStatus(err) {
 
 function isRecoverableError(err) {
   const { httpStatus, apiResponseMessage } = parseApiError(err);
-  if (httpStatus !== null && httpStatus >= 500) return true;
+  if (httpStatus !== null && (httpStatus >= 500 || httpStatus === 429)) return true;
   const msg = (apiResponseMessage || "").toLowerCase();
   if (msg.includes("econnreset") || msg.includes("etimedout") || msg.includes("econnrefused")) return true;
   if (msg.includes("socket hang up") || msg.includes("network error") || msg.includes("networkerror")) return true;

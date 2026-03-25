@@ -240,8 +240,8 @@ Construct a JSON object with this structure:
 
 For each finding marked "Post comment":
 - `path`: the file path relative to repo root
-- `line`: the `Diff line` value from the findings table. Use the value provided by the review subagents directly — do NOT re-derive or manually verify it
-- `side`: `RIGHT` for new/modified code, `LEFT` for deleted code
+- `line`: the line number for the comment. For `RIGHT` side, this is the new-file line number (from `+new_start,new_count` hunk range). For `LEFT` side, this is the old-file line number (from `-old_start,old_count` hunk range). Use the `Diff line` value from the findings table when the finding targets new/modified code. For findings targeting deleted code, use the old-file line number from the `-`-side of the diff hunk
+- `side`: `RIGHT` for new/modified code, `LEFT` for deleted code. Use `LEFT` only when commenting on lines that were removed (shown with `-` prefix in the diff)
 - `body`: include priority, title, review type with model name, description, and suggested fix
 - Each finding gets its own comment — do NOT merge multiple findings into one comment
 

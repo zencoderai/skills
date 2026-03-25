@@ -104,6 +104,10 @@ describe("redact", () => {
     assert.equal(redact("refresh ghr_RefreshToken789"), "refresh [REDACTED]");
   });
 
+  it("redacts ghu_ user access tokens", () => {
+    assert.equal(redact("found ghu_UserAccessToken123"), "found [REDACTED]");
+  });
+
   it("redacts github_pat_ fine-grained PATs", () => {
     assert.equal(redact("pat github_pat_FineGrained123"), "pat [REDACTED]");
   });
@@ -821,7 +825,18 @@ describe("isRecoverableError", () => {
     assert.equal(isRecoverableError({ message: "socket hang up" }), true);
   });
 
-  it("does not treat 4xx as recoverable", () => {
+  it("treats 429 Too Many Requests as recoverable", () => {
+    assert.equal(isRecoverableError({ stderr: "HTTP 429 Too Many Requests", status: 1 }), true);
+  });
+
+  it("treats 429 from JSON stdout as recoverable", () => {
+    assert.equal(isRecoverableError({
+      stdout: JSON.stringify({ message: "Too Many Requests", status: "429" }),
+      stderr: "gh: Too Many Requests (HTTP 429)",
+    }), true);
+  });
+
+  it("does not treat other 4xx as recoverable", () => {
     assert.equal(isRecoverableError({ stderr: "HTTP 404 not found", status: 1 }), false);
     assert.equal(isRecoverableError({ stderr: "HTTP 422 validation", status: 1 }), false);
   });
