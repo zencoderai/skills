@@ -133,10 +133,10 @@ Output this format:
 
 ### Findings
 
-| # | Vulnerability | CWE | Location | Diff line | Side |
-|---|--------------|-----|----------|-----------|------|
-| 1 | Description | CWE-XXX | link to specific line in file | 42 | RIGHT |
-| 2 | Description | CWE-XXX | link to specific line in file | 55 | LEFT |
+| # | Vulnerability | Location | Diff line | Side |
+|---|--------------|----------|-----------|------|
+| 1 | Description | link to specific line in file | 42 | RIGHT |
+| 2 | Description | link to specific line in file | 55 | LEFT |
 
 ### Details
 
@@ -144,9 +144,6 @@ Output this format:
 **File:** link to specific line in file
 **Diff line:** 42
 **Side:** RIGHT
-**CWE:** [CWE-XXX](https://cwe.mitre.org/data/definitions/XXX.html)
-**CVSS Estimate:** [Score if applicable]
-
 **Description:**
 What the vulnerability is and why it's exploitable.
 
@@ -175,7 +172,6 @@ corrected code with proper security controls
 ```
 
 **Rules:**
-- Include CWE references for all findings when applicable.
 - Provide concrete exploit scenarios to justify significance.
 - Include secure code fixes for significant findings.
 - Consider both immediate exploitability and chained attack potential.
