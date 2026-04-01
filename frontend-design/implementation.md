@@ -19,14 +19,14 @@ You will receive:
 
 ## How to Implement
 
-### 1. Plan the Direction
+### 1. Internalize the Brief
 
-Before writing any code, commit to:
+Before writing any code, read the brief and confirm your understanding of:
 - **Objective**: What the page is and who it's for
-- **Aesthetic direction**: A specific, opinionated direction (not generic)
+- **Aesthetic direction**: The orchestrator's chosen direction — execute it faithfully, don't replace it
 - **Content structure**: Sections, hierarchy, key elements
-- **Typography direction**: Font mood and pairing strategy
-- **Color direction**: Mood-based palette guidance
+- **Typography direction**: Font mood and pairing strategy from the brief
+- **Color direction**: Mood-based palette guidance from the brief
 - **What makes it memorable**: The one thing that makes someone stop scrolling
 - **Image needs**: List specific images to generate (hero photo, illustrations, avatars, textures, etc.) — plan these upfront so they integrate with the design, not as an afterthought
 
@@ -34,7 +34,7 @@ Before writing any code, commit to:
 
 If the design benefits from imagery, generate it as part of implementation rather than faking it with CSS-only substitutes.
 
-- **Use the image generation tool** for hero photos, illustrations, avatars, textures, or other missing visual assets.
+- **Use an image generation tool** (e.g., `generate_image` or similar available tool) for hero photos, illustrations, avatars, textures, or other missing visual assets.
 - **Generate early** so images can influence layout, spacing, and composition decisions.
 - **Save generated assets** into the `assets/` subfolder next to the HTML file.
 - **Match the brief**: style, mood, composition, and subject matter should align with the design direction.
