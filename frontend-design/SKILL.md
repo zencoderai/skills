@@ -48,12 +48,13 @@ Before delegating anything, commit to:
 - **Typography direction**: Font mood and pairing strategy
 - **Color direction**: Mood-based palette guidance
 - **What makes it memorable**: The one thing that makes someone stop scrolling
+- **Image needs**: Identify any images the design requires (hero photos, illustrations, avatars, textures, backgrounds, etc.) so the implementation agent can generate them. **Prefer raster images over SVG** — use SVG only for simple schematic visuals (icons, diagrams, simple geometric shapes). Never reference Unsplash, Pexels, or any external image service. Don't generate images yourself, let the implementation agent handle that.
 
 ### 2. Write the Brief
 
 Write the design brief to a file at `{temp_dir}/brief.md`. The `{temp_dir}` is a unique temporary directory for this design session — create it at `TMPDIR/{short_task_name}_{uuid}/` (where `{uuid}` is a newly generated UUID). Use the OS temp directory.
 
-The brief must include everything the implementation agent needs: objective, target audience, aesthetic direction, content structure, typography, colors, output path, and any user-provided constraints or design system references.
+The brief must include everything the implementation agent needs: objective, target audience, aesthetic direction, content structure, typography, colors, output path, image needs, and any user-provided constraints or design system references.
 
 If the project has an existing design system file, reference its path in the brief — do not inline the contents.
 

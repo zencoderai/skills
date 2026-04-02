@@ -28,13 +28,15 @@ Before writing any code, read the brief and confirm your understanding of:
 - **Typography direction**: Font mood and pairing strategy from the brief
 - **Color direction**: Mood-based palette guidance from the brief
 - **What makes it memorable**: The one thing that makes someone stop scrolling
-- **Image needs**: List specific images to generate (hero photo, illustrations, avatars, textures, etc.) — plan these upfront so they integrate with the design, not as an afterthought
+- **Image needs**: List specific images to generate (hero photos, illustrations, avatars, textures, backgrounds, etc.) — plan these upfront so they integrate with the design, not as an afterthought.
 
 ### Image generation
 
-If the design benefits from imagery, generate it as part of implementation rather than faking it with CSS-only substitutes.
+**Actively generate images whenever they would improve the design** — do not settle for CSS-only substitutes. Generated imagery is a first-class design tool, not a fallback.
 
-- **Use an image generation tool** (e.g., `generate_image` or similar available tool) for hero photos, illustrations, avatars, textures, or other missing visual assets.
+- **Use an image generation tool** (e.g., `generate_image` or similar available tool) for hero photos, illustrations, avatars, textures, backgrounds, or any visual asset that strengthens the design.
+- **Prefer generated raster images (PNG/JPG) over SVG.** Reserve SVG only for simple schematic visuals: icons, diagrams, simple geometric shapes. For anything with photographic quality, texture, depth, or artistic complexity — generate a raster image.
+- **Never use Unsplash, Pexels, or any external image service.** All imagery must be generated locally via available tools, never hotlinked or fetched from third-party image libraries.
 - **Generate early** so images can influence layout, spacing, and composition decisions.
 - **Save generated assets** into the `assets/` subfolder next to the HTML file.
 - **Match the brief**: style, mood, composition, and subject matter should align with the design direction.
@@ -120,4 +122,6 @@ The principles above apply universally, but their **expression** changes by cont
 - Deeply nested generic `<div>` soup instead of semantic HTML elements
 - Missing interaction states: hover-only polish with no focus, active, or disabled states
 - Excessive `border-radius: 9999px` on everything and generic SVG blob backgrounds
-- **Image-free cop-outs**: Using only CSS gradients, inline SVGs, or emoji where real images (hero photos, illustrations, avatars) would make the design substantially more compelling. If a section would benefit from imagery, generate it — don't fake it with shapes
+- **Image-free cop-outs**: Using only CSS gradients, inline SVGs, or emoji where real images (hero photos, illustrations, avatars) would make the design more compelling. If a section would benefit from imagery, generate it — don't fake it with shapes
+- **SVG overuse**: Using complex SVG illustrations where a generated raster image would look far better. SVG is for icons and simple schematics only
+- **External image services**: Hotlinking to Unsplash, Pexels, Pixabay, or any third-party image URL. All images must be generated locally and saved to `assets/`
