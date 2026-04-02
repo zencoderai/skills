@@ -52,7 +52,20 @@ Before delegating anything, commit to:
 
 ### 2. Write the Brief
 
-Write the design brief to a file at `{temp_dir}/brief.md`. The `{temp_dir}` is a temporary directory for this design session — create it at `TMPDIR/{short_task_name}/`. Use the OS temp directory.
+Write the design brief to a file at `{temp_dir}/brief.md`. The `{temp_dir}` is a unique temporary directory for this design session. Create it using `mktemp`:
+
+```bash
+# macOS / Linux / Git Bash on Windows
+mktemp -d "${TMPDIR:-/tmp}/{short_task_name}-XXXXXXXX"
+```
+
+If `mktemp` is not available (e.g., native Windows without Git Bash), use PowerShell:
+
+```powershell
+$dir = Join-Path ([System.IO.Path]::GetTempPath()) ("{short_task_name}-" + [System.IO.Path]::GetRandomFileName()); New-Item -ItemType Directory -Path $dir | Select-Object -ExpandProperty FullName
+```
+
+The `XXXXXXXX` (8 random characters) ensures uniqueness across concurrent sessions. Use the resulting path as `{temp_dir}` for the rest of the session.
 
 The brief must include everything the implementation agent needs: objective, target audience, aesthetic direction, content structure, typography, colors, output path, image needs, and any user-provided constraints or design system references.
 
