@@ -52,7 +52,7 @@ Before delegating anything, commit to:
 
 ### 2. Write the Brief
 
-Write the design brief to a file at `{temp_dir}/brief.md`. The `{temp_dir}` is a unique temporary directory for this design session — create it at `TMPDIR/{short_task_name}_{uuid}/` (where `{uuid}` is a newly generated UUID). Use the OS temp directory.
+Write the design brief to a file at `{temp_dir}/brief.md`. The `{temp_dir}` is a temporary directory for this design session — create it at `TMPDIR/{short_task_name}/`. Use the OS temp directory.
 
 The brief must include everything the implementation agent needs: objective, target audience, aesthetic direction, content structure, typography, colors, output path, image needs, and any user-provided constraints or design system references.
 
