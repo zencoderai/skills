@@ -87,7 +87,7 @@ Read the brief file to understand what was requested: purpose, audience, aesthet
 
 ### 2. Open & Inspect the Page
 
-Open the HTML file in a browser using browser automation (e.g., via browser tool or playwright skill). Take screenshots at multiple viewport sizes:
+Open the HTML file in a browser using browser automation (prefer playwright skill it it's available, use browser tool or any suitable skill otherwise). Take screenshots at multiple viewport sizes:
 - **1440px** — desktop
 - **768px** — tablet
 - **375px** — mobile
