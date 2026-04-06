@@ -2,7 +2,7 @@
 name: playwright
 description: "Browser automation with Playwright. Use when the user asks to test a website, take screenshots, check responsive design, test login flows, fill forms, check broken links, or automate any browser task."
 metadata:
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 # Playwright (Browser Automation)
@@ -47,8 +47,8 @@ Write custom Playwright code to `/tmp/playwright-test-*.js`. Never write test fi
 
 Rules:
 - Parameterize URLs — put detected/provided URL in a `TARGET_URL` constant at top
-- Use `headless: false` by default — only use headless when user explicitly requests it
-- Use `slowMo: 100` for visibility when helpful
+- Use `headless: true` by default — only use `headless: false` when user explicitly requests a visible browser
+- Use `slowMo: 100` for visibility when running in headed mode
 
 ### 5. Execute
 
@@ -60,7 +60,7 @@ For quick one-off tasks, execute inline without creating files:
 
 ```bash
 cd $SKILL_DIR && node run.js "
-const browser = await chromium.launch({ headless: false });
+const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
 await page.goto('http://localhost:3001');
 await page.screenshot({ path: '/tmp/quick-screenshot.png', fullPage: true });
@@ -76,7 +76,7 @@ await browser.close();
 
 ### 6. Report results
 
-Display results in real-time. Browser window is visible for debugging. Test files in `/tmp` are auto-cleaned by the OS.
+Display results in real-time. Browser runs headless by default. Test files in `/tmp` are auto-cleaned by the OS.
 
 ## Common Patterns
 
@@ -89,7 +89,7 @@ const { chromium } = require('playwright');
 const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 
 (async () => {
-  const browser = await chromium.launch({ headless: false, slowMo: 100 });
+  const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   // Desktop test
@@ -115,7 +115,7 @@ const { chromium } = require('playwright');
 const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   await page.goto(`${TARGET_URL}/login`);
@@ -141,7 +141,7 @@ const { chromium } = require('playwright');
 const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 
 (async () => {
-  const browser = await chromium.launch({ headless: false, slowMo: 50 });
+  const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   await page.goto(`${TARGET_URL}/contact`);
@@ -165,7 +165,7 @@ const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 const { chromium } = require('playwright');
 
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   await page.goto('http://localhost:3000');
@@ -200,7 +200,7 @@ const { chromium } = require('playwright');
 const { chromium } = require('playwright');
 
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
@@ -232,7 +232,7 @@ const { chromium } = require('playwright');
 const TARGET_URL = 'http://localhost:3001'; // Auto-detected
 
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   const viewports = [
@@ -354,5 +354,5 @@ For comprehensive Playwright API documentation, see [API_REFERENCE.md](API_REFER
 - Always use try-catch for robust automation.
 - **Playwright not installed?** Run `cd $SKILL_DIR && npm run setup`.
 - **Module not found?** Ensure running from skill directory via `run.js` wrapper.
-- **Browser doesn't open?** Check `headless: false` and ensure display is available.
+- **Need a visible browser?** Set `headless: false` and ensure a display is available.
 - **Element not found?** Add wait: `await page.waitForSelector('.element', { timeout: 10000 })`.
