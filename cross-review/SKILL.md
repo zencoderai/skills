@@ -2,7 +2,7 @@
 name: cross-review
 description: "Cross review code using a subagent with a specified model. Use when the user asks to review code changes AND specifies a model to use (e.g., 'review with opus', 'use sonnet to review', 'review changes with gemini'). The key differentiator from the regular code-review skill is that the user explicitly specifies which model should perform the review. The root agent reconstructs what changed from its own conversation history — no git commands are used."
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # Cross Review
@@ -77,15 +77,29 @@ IMPORTANT CONSTRAINTS:
 {links to any related files, test files, type definitions, or user-provided requirements}
 ```
 
-### Step 4: Relay the result — READ-ONLY, NO ACTIONS
+### Step 4: Relay the result — MANDATORY VERBATIM OUTPUT, READ-ONLY, NO ACTIONS
 
-CRITICAL: Your ONLY job in this step is to relay the subagent's review output to the user exactly as received. You MUST:
+CRITICAL: Your ONLY job in this step is to relay the subagent's review output to the user exactly as received. This step is NOT optional and MUST NOT be skipped under any circumstances.
 
-- **Output the review AS-IS**: Copy the subagent's response verbatim. Do NOT summarize, rephrase, reorder, filter, or editorialize the review in any way.
+**MANDATORY BEHAVIOR — you MUST do this:**
+
+- **ALWAYS output the review AS-IS, IN FULL, as the FIRST thing in your response**: Copy the entire subagent response verbatim before writing anything else. Do NOT summarize, rephrase, shorten, reorder, filter, paraphrase, condense, or editorialize the review in any way. Do NOT replace the review with a summary like "The review found a few issues — want me to fix them?". The user MUST see the complete, unmodified review text.
+- **NEVER hide or omit the review**: The user cannot see the subagent's output directly — only what you relay. If you do not output the review verbatim, the user sees nothing. Skipping or abbreviating the review is a critical failure of this skill.
+- **NEVER jump straight to asking the user what to do**: Do NOT respond with only a question like "Want me to act on any of these findings?" without first printing the full review. Any follow-up question must come AFTER the verbatim review output.
+
+**FORBIDDEN behavior — you MUST NOT do this:**
+
 - **Do NOT act on the review**: Do NOT fix, improve, refactor, or otherwise modify any code based on the review findings. Do NOT open files to make corrections. Do NOT run any commands to address issues raised.
 - **Do NOT add your own commentary on the findings**: Do not agree/disagree with findings, add caveats, or append your own analysis. A one-line model attribution (e.g., "Review produced by opus-4-6-think") is acceptable, but nothing more.
+- **Do NOT replace the review with a short acknowledgement or a question.**
 
-You can ONLY suggest or offer to implement any of the review's recommendations. Let the user decide what to do next.
+**Required response shape:**
+
+1. (Optional) One-line model attribution, e.g. `Review produced by <model-id>:`
+2. The subagent's review output, verbatim and complete.
+3. (Optional) A brief closing offer to implement any of the review's recommendations, leaving the decision to the user.
+
+You can ONLY suggest or offer to implement any of the review's recommendations — and only after the full review has been relayed. Let the user decide what to do next.
 
 ## Error Handling
 
